@@ -38,14 +38,19 @@ the loop for any visual verdict.
 
 ```bash
 npm run dev &   # serves :5173
-~/abraxas/maren/.claude/scripts/webshot.sh \
-  "http://localhost:5173/src/sidebar/dev.html?state=chat" /tmp/rp.png --width 420 --height 900
-# then Read /tmp/rp.png — Read renders images
+# then open http://localhost:5173/src/sidebar/dev.html?state=chat
 ```
 
-`webshot.sh` shells Chrome-for-Testing (`~/.local/opt/chrome-for-testing/chrome`) headless.
-Flags: `--width --height --full --dark`. The sidebar's real width is ~400px — screenshot near
-that, not at 1280. `--dark` emulates `prefers-color-scheme` (theme default is `system`).
+**Screenshot capture is unwired.** This file used to name a `webshot.sh` wrapper; neither it
+nor the directory it lived in has existed since 2026-08-19, so following that line ran a
+command that was not there. Chrome-for-Testing itself IS live at
+`~/.local/opt/chrome-for-testing/chrome` — only the wrapper is missing. Removed 2026-09-02
+rather than re-pointed, because screenshot wiring for this workspace is still undecided and a
+line that misleads is worse than an absent one.
+
+Until a wrapper lands, a visual verdict is made by eye in a browser, and any skill whose first
+step is "capture the page" blocks there by design. The sidebar's real width is ~400px — view
+near that, not at 1280 — and the theme default is `system`, so check both.
 
 **Verified working 2026-07-19** (ported from frozen claudeV2; py-playwright is installed but
 has NO browsers — don't reach for it).
