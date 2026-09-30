@@ -210,13 +210,22 @@ export default function FirstRun({
       </ol>
 
       <div className="mt-4 space-y-2">
+        {/* The button always names its action; while it's locked, the reason
+            sits under it in readable ink. It used to live inside the disabled
+            label at half opacity, dimmest in dark mode (audit 2026-09-30, #7). */}
         <button
           onClick={onStart}
           disabled={!ready}
+          aria-describedby={ready ? undefined : "firstrun-locked"}
           className="focus-ring w-full px-3 py-2 rounded-lg bg-fordham-maroon text-white text-sm font-medium hover:bg-fordham-maroon/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {ready ? "Let's get to know each other" : "Finish steps 1–2 to start"}
+          Let's get to know each other
         </button>
+        {!ready && (
+          <p id="firstrun-locked" className="text-center text-xs text-stone-600 dark:text-stone-400">
+            Finish steps 1 and 2 first.
+          </p>
+        )}
         <button
           onClick={onSkip}
           className="focus-ring w-full px-3 py-1.5 rounded-lg text-xs text-stone-600 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-colors"

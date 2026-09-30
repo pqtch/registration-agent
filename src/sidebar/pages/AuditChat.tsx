@@ -11,6 +11,7 @@ import type {
 } from "../../shared/types";
 import Message from "../components/Message";
 import Notice from "../components/Notice";
+import { describeTurnError } from "../errorCopy";
 import StatusStrip from "../components/StatusStrip";
 import FirstRun, { DEGREEWORKS_URL } from "../components/FirstRun";
 import {
@@ -65,6 +66,12 @@ const TOOL_PHRASES: Record<string, string> = {
   forget_memory: "Updating my memory",
   run_what_if: "Running a what-if audit",
 };
+
+// Log geometry (ADR 0038). FLOOR_MIN is the resident's band: the ram's
+// visible figure plus its inset, so the last line at rest clears him.
+const BOTTOM_THRESHOLD = 40; // px — "near the bottom" still counts as at it
+const FLOOR_MIN = 128;
+const PIN_GAP = 8; // px between the pane's top edge and a pinned turn
 
 const SESSION_KEY = "chat_messages";
 const ONBOARDING_MODE_KEY = "chat_onboarding_mode";
@@ -240,6 +247,18 @@ export default function AuditChat({
   const isAtBottomRef = useRef(true);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
+  // The floor under the log (ADR 0038). Two jobs, one element:
+  //  - it reserves the resident's band so the last line clears the ram;
+  //  - after a send it grows so the student's turn CAN pin to the top even
+  //    when little sits below it, and shrinks as the answer fills in, so the
+  //    view holds still while the answer streams (Claude's contract).
+  // Sized imperatively (style.height), never through state, so resizing it
+  // can't re-render the log mid-stream.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const floorRef = useRef<HTMLDivElement>(null);
+  const pinnedTurnRef = useRef<HTMLElement | null>(null);
+  const landAtEndRef = useRef(false);
+
   // Load audit text + profile + first name + restore session on mount
   useEffect(() => {
     chrome.runtime.sendMessage({ type: "GET_AUDIT_TEXT" }, (res) => {
@@ -286,6 +305,9 @@ export default function AuditChat({
       const savedMode = r[ONBOARDING_MODE_KEY] as boolean | undefined;
       const savedShowContinue = r[SHOW_CONTINUE_KEY] as boolean | undefined;
       if (Array.isArray(saved) && saved.length > 0) {
+        // A reopened panel lands where the conversation ended, not at its
+        // first line with the resident standing over the middle of it.
+        landAtEndRef.current = true;
         setMessages(saved);
         if (savedMode) setOnboardingMode(true);
         if (savedShowContinue) setShowContinueButton(true);
@@ -732,19 +754,53 @@ export default function AuditChat({
   // the bottom while they're trying to re-read something earlier, they lose
   // their place. Standard fix — only auto-scroll when the user is already at
   // the bottom; show a "↓" button when they've scrolled up.
+  //
+  // Measured on scroll AND on every size change of the log or the pane. It
+  // used to be scroll-only, so a stream growing below the fold, a toast
+  // shrinking the pane, or a restored conversation left it stale at `true`,
+  // and the resident stood opaque over the answer (audit 2026-09-30, #1).
+  function measureAtBottom() {
+    const c = scrollContainerRef.current;
+    if (!c) return;
+    const atBottom = c.scrollHeight - c.scrollTop - c.clientHeight < BOTTOM_THRESHOLD;
+    isAtBottomRef.current = atBottom;
+    setIsAtBottom((prev) => (prev === atBottom ? prev : atBottom));
+  }
+
+  // Size the floor (see floorRef). With a pinned turn, the floor fills
+  // whatever the viewport has left below that turn's content; otherwise it is
+  // just the resident's band.
+  function fitFloor() {
+    const c = scrollContainerRef.current;
+    const floor = floorRef.current;
+    if (!c || !floor) return;
+    let h = FLOOR_MIN;
+    const turn = pinnedTurnRef.current;
+    if (turn?.isConnected) {
+      const below = floor.getBoundingClientRect().top - turn.getBoundingClientRect().top;
+      const padBottom = parseFloat(getComputedStyle(c).paddingBottom) || 0;
+      h = Math.max(FLOOR_MIN, c.clientHeight - PIN_GAP - below - padBottom);
+    }
+    floor.style.height = `${Math.round(h)}px`;
+  }
+
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const BOTTOM_THRESHOLD = 40; // px — small buffer so "near bottom" counts
-    const onScroll = () => {
-      const atBottom =
-        container.scrollHeight - container.scrollTop - container.clientHeight <
-        BOTTOM_THRESHOLD;
-      isAtBottomRef.current = atBottom;
-      setIsAtBottom((prev) => (prev === atBottom ? prev : atBottom));
+    const c = scrollContainerRef.current;
+    const content = contentRef.current;
+    if (!c || !content) return;
+    const onScroll = () => measureAtBottom();
+    c.addEventListener("scroll", onScroll, { passive: true });
+    // The floor sits outside `content`, so resizing it never re-triggers this.
+    const ro = new ResizeObserver(() => {
+      fitFloor();
+      measureAtBottom();
+    });
+    ro.observe(c);
+    ro.observe(content);
+    return () => {
+      c.removeEventListener("scroll", onScroll);
+      ro.disconnect();
     };
-    container.addEventListener("scroll", onScroll, { passive: true });
-    return () => container.removeEventListener("scroll", onScroll);
   }, []);
 
   // Pin-to-top (ADR 0032) — the auto-follow effect this replaces was the
@@ -760,12 +816,16 @@ export default function AuditChat({
     const turns = c.querySelectorAll<HTMLElement>('[data-turn="user"]');
     const el = turns[turns.length - 1];
     if (!el) return;
+    // Grow the floor first: without room below the turn, scrollTo clamps and
+    // the turn stays near the bottom, where the answer streams under the ram.
+    pinnedTurnRef.current = el;
+    fitFloor();
     // Rect math, not offsetTop — offsetParent is the message's own relative
     // wrapper, so offsetTop would measure the wrong ancestor.
     const cRect = c.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
     c.scrollTo({
-      top: c.scrollTop + (elRect.top - cRect.top) - 8,
+      top: c.scrollTop + (elRect.top - cRect.top) - PIN_GAP,
       // `behavior` is a JS argument, so the reduced-motion block in
       // styles.css cannot reach it. Read the query here instead.
       behavior: prefersReducedMotion() ? "auto" : "smooth",
@@ -773,6 +833,12 @@ export default function AuditChat({
   }
 
   useEffect(() => {
+    if (landAtEndRef.current) {
+      landAtEndRef.current = false;
+      const c = scrollContainerRef.current;
+      if (c) c.scrollTop = c.scrollHeight;
+      measureAtBottom();
+    }
     if (!pinNextRef.current) return;
     pinNextRef.current = false;
     pinLastUserTurn();
@@ -903,6 +969,10 @@ export default function AuditChat({
     textareaRef.current?.focus();
   }
 
+  // Gated on welcomeDecided so the composer doesn't flash locked while the
+  // key read is still in flight on mount.
+  const noKeyYet = welcomeDecided && !hasKey;
+
   return (
     <div className="flex flex-col h-full">
 
@@ -1012,7 +1082,7 @@ export default function AuditChat({
         {statusPhrase && <span className="sr-only">Advisor is thinking</span>}
       <div
         ref={scrollContainerRef}
-        className="h-full overflow-y-auto p-3 space-y-3"
+        className="h-full overflow-y-auto p-3"
         role="log"
         // Muted while a turn streams: announcing every chunk (and every
         // rotating phrase) is SR spam. AI_DONE flips loading off and the
@@ -1022,6 +1092,7 @@ export default function AuditChat({
         aria-atomic="false"
         aria-label="Advisor conversation"
       >
+        <div ref={contentRef} className="space-y-3">
         {/* Empty states wait for welcomeDecided — nothing paints until the
             onboarding round-trips resolve, killing the suggestions→FirstRun
             flash on a fresh install. Implements: ADR 0024. */}
@@ -1082,24 +1153,33 @@ export default function AuditChat({
 
         {/* Turn-scoped system events (ADR 0026) — anchored under the turn
             that produced them, never inside `messages`. One slot each. */}
-        {turnError && (
-          <Notice
-            severity="error"
-            title="The advisor couldn't respond"
-            body={turnError}
-            action={{ label: "Retry", onClick: retryTurn }}
-            onDismiss={() => setTurnError(null)}
-          />
-        )}
+        {turnError && (() => {
+          const copy = describeTurnError(turnError);
+          return (
+            <Notice
+              severity="error"
+              title={copy.title}
+              body={turnError}
+              action={
+                copy.fix === "settings"
+                  ? { label: "Open Settings", onClick: onOpenSettings }
+                  : { label: "Retry", onClick: retryTurn }
+              }
+              onDismiss={() => setTurnError(null)}
+            />
+          );
+        })()}
         {turnNotice && (
           <Notice
             severity="info"
             title={
               // System chrome, so no first person — "I" here would be the
               // advisor's voice leaking into our Notice. Implements: ADR 0026.
+              // Once, plainly, with no count that could go stale if the cap
+              // in chat-loop.ts changes (audit 2026-09-30, #9).
               turnNotice === "tool-cap"
-                ? "The advisor hit its per-turn tool limit."
-                : "The response was cut short."
+                ? "Paused before finishing: too many lookups for one answer."
+                : "The answer was cut off at its length limit."
             }
             action={{
               label: "Continue",
@@ -1126,10 +1206,11 @@ export default function AuditChat({
         {/* The in-flight waiting indicator (ADR 0024) now lives in Fordhawke's
             thought bubble, rendered as a pane overlay above — not here in the
             message flow. */}
-        {/* Floor for the resident: reserves the bottom band so the last
-            message's text clears the ram's ~130px overlay instead of running
-            under it. The ram stands in this gap, above the composer. */}
-        <div aria-hidden className="h-32 shrink-0" />
+        </div>
+        {/* The floor (ADR 0038): the resident's band at rest, and the room a
+            pinned turn needs while its answer streams in. Sized by fitFloor(),
+            outside contentRef so resizing it can't re-trigger the observer. */}
+        <div ref={floorRef} aria-hidden className="shrink-0" style={{ height: FLOOR_MIN }} />
         <div ref={bottomRef} />
       </div>
       </div>
@@ -1180,9 +1261,16 @@ export default function AuditChat({
               }
             }}
             placeholder={
-              showContinueButton ? "Press Continue to start chat…" : "Ask anything…"
+              showContinueButton
+                ? "Press Continue to start chat…"
+                : noKeyYet
+                  ? "Add your API key in Settings to start"
+                  : "Ask anything…"
             }
-            disabled={showContinueButton}
+            // Locked until a key exists: a message sent without one used to
+            // replace the setup steps with a turn that could only fail
+            // (audit 2026-09-30, #7).
+            disabled={showContinueButton || noKeyYet}
             aria-label="Message the advisor"
             className="focus-ring flex-1 px-3.5 py-[7px] rounded-[18px] border border-stone-300 dark:border-stone-700 bg-transparent text-sm leading-relaxed [field-sizing:content] max-h-36 resize-none disabled:opacity-50 placeholder:text-stone-400 dark:placeholder:text-stone-500"
           />
@@ -1197,7 +1285,7 @@ export default function AuditChat({
           ) : (
             <button
               onClick={() => sendMessage(input)}
-              disabled={showContinueButton || !input.trim()}
+              disabled={showContinueButton || noKeyYet || !input.trim()}
               aria-label="Send message"
               className="focus-ring shrink-0 w-[34px] h-[34px] rounded-full bg-fordham-maroon text-white disabled:opacity-40 disabled:bg-stone-400 dark:disabled:bg-stone-600 hover:bg-opacity-90 active:scale-90 transition-all duration-200 ease-spring inline-flex items-center justify-center"
             >

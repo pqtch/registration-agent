@@ -63,7 +63,7 @@ export default function App() {
           wordmark and every accent below, the way Messages carries blue
           without painting its navigation bar blue. backdrop-blur matters the
           moment content scrolls beneath the bar. */}
-      <header className="flex items-center justify-between pl-4 pr-2 py-2 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur-md border-b border-stone-200/70 dark:border-stone-800 shrink-0 z-10">
+      <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 pl-4 pr-2 py-2 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur-md border-b border-stone-200/70 dark:border-stone-800 shrink-0 z-10">
         {/* Brand lockup: the single "Ram Plan" logo image — the pixel-art
             Fordhawke head + a fountain-pen cursive wordmark, baked as one asset.
             It supersedes the 0036 crest-plus-Newsreader pairing: head and

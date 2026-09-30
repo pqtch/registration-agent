@@ -22,16 +22,31 @@ function describeSearch(input: Record<string, unknown>): string {
   else if (input.max_number) parts.push(`≤${input.max_number}`);
   if (input.keyword) parts.push(`"${input.keyword}"`);
   if (Array.isArray(input.days) && input.days.length > 0)
-    parts.push(input.days.join(""));
+    parts.push(daysOf(input.days));
   if (Array.isArray(input.attributes) && input.attributes.length > 0)
     parts.push(input.attributes.map((a) => String(a)).join("+"));
   if (input.has_seats) parts.push("open seats");
   return parts.join(" · ");
 }
 
-function idsOf(input: Record<string, unknown>): string {
-  const ids = Array.isArray(input.ids) ? input.ids : [];
-  return ids.map((id: unknown) => `#${id}`).join(" ");
+// Registrar day codes (R = Thursday, S/U = weekend, ADR 0023) spoken as the
+// days a student reads. "T" alone was undecodable (audit 2026-09-30, #4).
+const DAY_NAMES: Record<string, string> = {
+  M: "Mon", T: "Tue", W: "Wed", R: "Thu", F: "Fri", S: "Sat", U: "Sun",
+};
+
+function daysOf(days: unknown[]): string {
+  return days.map((d) => DAY_NAMES[String(d)] ?? String(d)).join("/");
+}
+
+function memories(n: number): string {
+  return `${n} ${n === 1 ? "memory" : "memories"}`;
+}
+
+// Memory row ids (#3 #7) are storage keys, not something a student can read,
+// so the line reports how many instead.
+function idCount(input: Record<string, unknown>): number {
+  return Array.isArray(input.ids) ? input.ids.length : 0;
 }
 
 // verb: tracked caps · detail: mono (codes/filters) or plain (prose) ·
@@ -39,13 +54,13 @@ function idsOf(input: Record<string, unknown>): string {
 function describe(ev: ToolEvent): { verb: string; detail: string; done: string } {
   switch (ev.name) {
     case "recall_memory":
-      return { verb: "Recalled", detail: idsOf(ev.input), done: `${ev.courseCount ?? 0} loaded` };
+      return { verb: "Recalled", detail: "", done: memories(ev.courseCount ?? 0) };
     case "save_memory": {
       const desc = typeof ev.input.description === "string" ? ev.input.description : "";
       return { verb: "Saved memory", detail: desc, done: "saved" };
     }
     case "forget_memory":
-      return { verb: "Forgot", detail: idsOf(ev.input), done: "done" };
+      return { verb: "Forgot", detail: "", done: memories(idCount(ev.input)) };
     case "run_what_if": {
       const major = typeof ev.input.major === "string" ? ev.input.major : "";
       return { verb: "What-if audit", detail: major, done: "done" };

@@ -92,7 +92,8 @@ export default function Notice({
         <button
           onClick={onDismiss}
           aria-label="Dismiss"
-          className="focus-ring shrink-0 rounded px-1 text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-100"
+          // 24×24: the WCAG 2.2 AA target floor (2.5.8); the glyph alone was ~8px wide.
+          className="focus-ring shrink-0 inline-flex items-center justify-center w-6 h-6 rounded text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-100"
         >
           ×
         </button>

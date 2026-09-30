@@ -473,7 +473,7 @@ export default function Settings() {
           ) : (
             <button
               onClick={() => setPendingClearAll(true)}
-              className="focus-ring rounded px-1 text-xs font-medium text-red-600 dark:text-red-400 active:scale-95 transition-transform"
+              className="focus-ring rounded px-1 text-xs font-medium text-red-700 dark:text-red-400 active:scale-95 transition-transform"
             >
               Clear All
             </button>
@@ -787,7 +787,10 @@ export default function Settings() {
             The exact text Claude reads from your DegreeWorks page each session.
             {auditText && (
               <span className="ml-1">
-                {Math.round(auditText.length / 1000)}k chars · ~{Math.round(auditText.length / 4)} tokens.
+                {auditText.length < 1000
+                  ? `${auditText.length} chars`
+                  : `${Math.round(auditText.length / 1000)}k chars`}{" "}
+                · ~{Math.round(auditText.length / 4).toLocaleString()} tokens.
               </span>
             )}
           </>
@@ -841,7 +844,7 @@ export default function Settings() {
 
       {/* About — footer-only, like the fine print at the bottom of an iOS
           settings page. */}
-      <p className="px-4 pb-2 text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+      <p className="px-4 pb-2 text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
         RamPlan reads your DegreeWorks audit and uses Claude AI (Sonnet for
         chat, Haiku for profile extraction) to help you plan your courses.
         All data is stored locally in your browser.
@@ -869,7 +872,7 @@ function Section({
   return (
     <section>
       <div className="flex items-center justify-between px-4 mb-1.5">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-stone-600 dark:text-stone-400">
           {label}
         </h2>
         {labelAction}
@@ -883,7 +886,7 @@ function Section({
         {children}
       </div>
       {footer && (
-        <p className="px-4 mt-1.5 text-xs text-stone-500 dark:text-stone-400 leading-snug">
+        <p className="px-4 mt-1.5 text-xs text-stone-600 dark:text-stone-400 leading-snug">
           {footer}
         </p>
       )}
