@@ -80,6 +80,10 @@ function start() {
   });
 }
 
+export function clearCatalogError() {
+  set({ error: null });
+}
+
 export function loadCatalogTerm(term: string) {
   const termLabel = state.terms.find((t) => t.code === term)?.description ?? null;
   set({ progress: { done: 0, total: 1 }, error: null });

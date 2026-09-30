@@ -69,7 +69,7 @@ export default function OnboardingSavesBubble({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span
-                      className={`inline-block px-1.5 py-[1px] rounded text-[11px] font-semibold uppercase tracking-wide ${style.bg} ${style.text}`}
+                      className={`inline-block px-1.5 py-[1px] rounded text-[11px] font-medium ${style.bg} ${style.text}`}
                     >
                       {style.label}
                     </span>

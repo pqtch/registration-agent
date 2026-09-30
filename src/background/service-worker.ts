@@ -529,7 +529,7 @@ async function extractProfile(auditText: string): Promise<void> {
         studentProfile: profile,
         profileGeneratedAt: Date.now(),
       });
-      console.log("[FordhamHelper] Profile extracted:\n", profile);
+      console.log(`[FordhamHelper] Profile extracted (${profile.length} chars)`);
       broadcast({ type: "PROFILE_READY", profile });
     } else {
       // Empty string back from Haiku — surface it so the sidebar spinner
@@ -561,27 +561,6 @@ async function refreshCatalog(term: string, termLabel: string | null = null): Pr
         broadcast({ type: "CATALOG_PROGRESS", done, total, label });
       })
     );
-
-    if (rawSections.length > 0) {
-      const uniqueSubjects = new Set(rawSections.map((s) => s.subject));
-      const uniqueCourseCodes = new Set(rawSections.map((s) => `${s.subject} ${s.courseNumber}`));
-      const uniqueAttributes = new Set<string>();
-      let sectionsWithAttrs = 0;
-      for (const s of rawSections) {
-        const attrs = s.sectionAttributes ?? [];
-        if (attrs.length > 0) sectionsWithAttrs++;
-        for (const a of attrs) uniqueAttributes.add(a.code);
-      }
-      console.log(
-        `[FordhamHelper] Raw fetch: ${rawSections.length} sections, ` +
-          `${uniqueSubjects.size} unique subjects, ${uniqueCourseCodes.size} unique courses`
-      );
-      console.log(
-        `[FordhamHelper] Attributes: ${uniqueAttributes.size} distinct codes across ` +
-          `${sectionsWithAttrs}/${rawSections.length} sections`
-      );
-      console.log("[FordhamHelper] Subjects seen:", Array.from(uniqueSubjects).sort().join(", "));
-    }
 
     const courses = bannerSectionsToCourses(rawSections);
     await saveCourses(courses);

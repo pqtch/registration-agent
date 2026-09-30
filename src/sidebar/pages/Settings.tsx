@@ -12,23 +12,9 @@ import {
   type ThemePreference,
 } from "../theme";
 import { useMascotSize } from "../components/Mascot";
+import { useCatalog, loadCatalogTerm, clearCatalogError } from "../useCatalog";
 
-interface BannerTerm {
-  code: string;
-  description: string;
-}
 
-// A catalog refresh fails in two ways that want different recoveries, so the
-// UI keeps them apart rather than flattening both to a string (ADR 0029).
-// `expired` ⇒ `message` is the worker's one fixed sentence and `recoveryUrl`
-// is present; otherwise `message` is raw provider text and there is no action
-// worth offering. Re-running the fetch against a dead Banner session just
-// reproduces the failure — the only real recovery is a Banner tab.
-interface CatalogFailure {
-  message: string;
-  expired: boolean;
-  recoveryUrl?: string;
-}
 
 export default function Settings() {
   const [apiKey, setApiKey] = useState("");
@@ -47,15 +33,8 @@ export default function Settings() {
   const [auditText, setAuditText] = useState<string | null>(null);
   const [showAudit, setShowAudit] = useState(false);
 
-  // Course catalog state
-  const [terms, setTerms] = useState<BannerTerm[]>([]);
+  const catalog = useCatalog();
   const [selectedTerm, setSelectedTerm] = useState<string>("");
-  const [catalogTerm, setCatalogTerm] = useState<string | null>(null);
-  const [catalogCourseCount, setCatalogCourseCount] = useState<number>(0);
-  const [catalogUpdatedAt, setCatalogUpdatedAt] = useState<number | null>(null);
-  const [catalogRefreshing, setCatalogRefreshing] = useState(false);
-  const [catalogProgress, setCatalogProgress] = useState<{ done: number; total: number; label: string } | null>(null);
-  const [catalogError, setCatalogError] = useState<CatalogFailure | null>(null);
 
   // Long-term memory state. Provisional entries still accumulate internally
   // (the curator uses them for promotion tracking) but are deliberately not
@@ -133,21 +112,6 @@ export default function Settings() {
       }
     );
 
-    // Load cached catalog status
-    chrome.runtime.sendMessage({ type: "GET_CATALOG_STATUS" }, (r) => {
-      if (!r) return;
-      setCatalogTerm(r.term ?? null);
-      setCatalogCourseCount(r.courseCount ?? 0);
-      setCatalogUpdatedAt(r.updatedAt ?? null);
-      if (r.term) setSelectedTerm(r.term);
-    });
-
-    // Fetch available terms from Banner
-    chrome.runtime.sendMessage({ type: "GET_CATALOG_TERMS" }, (r) => {
-      if (!r || !r.terms) return;
-      setTerms(r.terms as BannerTerm[]);
-      setSelectedTerm((prev) => prev || (r.terms[0]?.code ?? ""));
-    });
 
     // Load long-term memory list + auto-save toggle state
     chrome.runtime.sendMessage({ type: "GET_MEMORIES" }, (r) => {
@@ -167,23 +131,6 @@ export default function Settings() {
         setRefreshing(false);
       } else if (msg.type === "PROFILE_ERROR") {
         setRefreshing(false);
-      } else if (msg.type === "CATALOG_PROGRESS") {
-        setCatalogProgress({ done: msg.done, total: msg.total, label: msg.label });
-      } else if (msg.type === "CATALOG_READY") {
-        setCatalogRefreshing(false);
-        setCatalogProgress(null);
-        setCatalogTerm(msg.term);
-        setCatalogCourseCount(msg.courseCount);
-        setCatalogUpdatedAt(msg.updatedAt);
-        setCatalogError(null);
-      } else if (msg.type === "CATALOG_ERROR") {
-        setCatalogRefreshing(false);
-        setCatalogProgress(null);
-        setCatalogError({
-          message: msg.error ?? "Unknown error",
-          expired: msg.expired === true,
-          recoveryUrl: typeof msg.recoveryUrl === "string" ? msg.recoveryUrl : undefined,
-        });
       } else if (msg.type === "MEMORY_UPDATED") {
         if (Array.isArray(msg.memories)) setMemories(msg.memories);
       } else if (msg.type === "AUTO_SAVE_UPDATED") {
@@ -303,25 +250,12 @@ export default function Settings() {
     setRerunDone(true);
   }
 
-  function refreshCatalog() {
-    if (!selectedTerm) return;
-    setCatalogRefreshing(true);
-    setCatalogError(null);
-    setCatalogProgress({ done: 0, total: 1, label: "starting" });
-    chrome.runtime.sendMessage({
-      type: "REFRESH_CATALOG",
-      term: selectedTerm,
-      termLabel: terms.find((t) => t.code === selectedTerm)?.description ?? null,
-    });
-  }
+  // The picker starts on the loaded term, else Banner's newest.
+  const shownTerm = selectedTerm || catalog.term || catalog.terms[0]?.code || "";
+  const loadingCatalog = !!catalog.progress;
 
   function formatCatalogDate(ts: number | null): string {
-    if (!ts) return "";
-    return new Date(ts).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    return ts ? new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
   }
 
   return (
@@ -329,7 +263,7 @@ export default function Settings() {
     // surface, each group is a raised rounded card of hairline-divided rows,
     // the explainer is a small footer BELOW its card — heading-first
     // documents become label-first controls.
-    <div className="h-full overflow-y-auto bg-stone-100 dark:bg-stone-950 px-4 py-5 space-y-7">
+    <div className="h-full space-y-7 overflow-y-auto bg-paper px-4 py-5">
 
       {/* API Key */}
       <Section
@@ -538,7 +472,7 @@ export default function Settings() {
                         const style = memoryTypeStyle(m.type);
                         return (
                           <span
-                            className={`ml-1.5 align-middle text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded-full ${style.bg} ${style.text}`}
+                            className={`ml-1.5 align-middle text-[10px] font-medium px-1.5 py-0.5 rounded-full ${style.bg} ${style.text}`}
                           >
                             {style.label}
                           </span>
@@ -674,92 +608,73 @@ export default function Settings() {
           <>
             Real Fordham sections from Banner — CRNs, meeting times, seats.
             The advisor searches this when recommending courses.{" "}
-            {catalogTerm && catalogCourseCount > 0 ? (
+            {catalog.term && catalog.courses.length > 0 ? (
               <>
-                {catalogCourseCount.toLocaleString()} courses loaded for{" "}
-                {terms.find((t) => t.code === catalogTerm)?.description ?? catalogTerm}
-                {catalogUpdatedAt && ` · ${formatCatalogDate(catalogUpdatedAt)}`}.
+                {catalog.courses.length.toLocaleString()} courses loaded for {catalog.termLabel ?? catalog.term}
+                {catalog.updatedAt && ` · ${formatCatalogDate(catalog.updatedAt)}`}.
               </>
             ) : (
-              !catalogRefreshing &&
-              !catalogError && (
-                <>No catalog loaded yet — pick a term and hit Refresh (~30–60 s).</>
-              )
+              !loadingCatalog && !catalog.error && <>No catalog loaded yet. Pick a term and choose Load (about a minute).</>
             )}
           </>
         }
       >
         <div className="flex items-center gap-2 px-4 py-2">
-          {/* No custom dropdown. `color-scheme` (styles.css + applyTheme) is
-              what makes the native <select> AND its popup follow the theme. */}
           <select
-            value={selectedTerm}
+            value={shownTerm}
             onChange={(e) => setSelectedTerm(e.target.value)}
-            disabled={catalogRefreshing || terms.length === 0}
+            disabled={loadingCatalog || catalog.terms.length === 0}
             aria-label="Catalog term"
-            className="focus-ring flex-1 min-w-0 py-1 rounded text-sm bg-transparent disabled:opacity-40"
+            className="focus-ring min-w-0 flex-1 rounded bg-transparent py-1 text-sm text-ink disabled:opacity-40"
           >
-            {terms.length === 0 && <option value="">Loading terms…</option>}
-            {terms.map((t) => (
+            {catalog.terms.length === 0 && <option value="">Loading terms…</option>}
+            {catalog.terms.map((t) => (
               <option key={t.code} value={t.code}>
                 {t.description}
               </option>
             ))}
           </select>
           <button
-            onClick={refreshCatalog}
-            disabled={catalogRefreshing || !selectedTerm}
-            className="focus-ring rounded px-1 text-sm font-medium text-fordham-maroon dark:text-fordham-maroon-ink disabled:opacity-40 active:scale-95 transition-transform"
+            onClick={() => shownTerm && loadCatalogTerm(shownTerm)}
+            disabled={loadingCatalog || !shownTerm}
+            className="focus-ring rounded px-1 text-sm font-medium text-fordham-maroon transition-transform active:scale-95 disabled:opacity-40 dark:text-fordham-maroon-ink"
           >
-            {catalogRefreshing ? "Loading…" : "Refresh"}
+            {loadingCatalog ? "Loading…" : shownTerm === catalog.term ? "Refresh" : "Load"}
           </button>
         </div>
 
-        {catalogRefreshing && catalogProgress && (
+        {catalog.progress && (
           <div className="px-4 py-2.5">
-            <div className="flex justify-between text-xs text-ink-3 mb-1.5">
-              <span>Fetching {catalogProgress.label}</span>
+            <div className="mb-1.5 flex justify-between text-xs tabular-nums text-ink-3">
+              <span>Loading sections</span>
               <span>
-                {catalogProgress.done} / {catalogProgress.total}
+                {catalog.progress.done} / {catalog.progress.total}
               </span>
             </div>
-            <div className="h-1.5 bg-sunk rounded-full overflow-hidden">
+            <div className="h-1.5 overflow-hidden rounded-full bg-sunk">
               <div
-                className="h-full bg-fordham-maroon dark:bg-fordham-maroon-ink rounded-full transition-[width] duration-200 ease-spring"
-                style={{
-                  width: `${
-                    catalogProgress.total > 0
-                      ? Math.round((catalogProgress.done / catalogProgress.total) * 100)
-                      : 0
-                  }%`,
-                }}
+                className="h-full rounded-full bg-fordham-maroon transition-[width] duration-200 ease-spring dark:bg-fordham-maroon-ink"
+                style={{ width: `${catalog.progress.total > 0 ? Math.round((catalog.progress.done / catalog.progress.total) * 100) : 0}%` }}
               />
             </div>
           </div>
         )}
 
-        {/* An expired session is recoverable and says where; an opaque failure
-            is not, and says that instead of offering a button that re-fails.
-            The second step ("now hit Refresh") needs no slot — that control is
-            one row up this same card. */}
-        {catalogError?.expired && catalogError.recoveryUrl ? (
+        {/* An expired session says where to recover; an opaque failure says so
+            instead of offering a retry that fails the same way (ADR 0029). */}
+        {catalog.error?.expired && catalog.error.recoveryUrl ? (
           <div className="px-4 py-2.5">
             <Notice
               severity="warn"
               title="Fordham registration session expired"
-              body={catalogError.message}
-              action={{ label: "Open Browse Classes", href: catalogError.recoveryUrl }}
-              onDismiss={() => setCatalogError(null)}
+              body={catalog.error.message}
+              action={{ label: "Open Browse Classes", href: catalog.error.recoveryUrl }}
+              onDismiss={clearCatalogError}
             />
           </div>
-        ) : catalogError ? (
+        ) : catalog.error ? (
           <div className="px-4 py-2.5">
-            <Notice
-              severity="error"
-              title="Catalog refresh failed"
-              body={catalogError.message}
-              onDismiss={() => setCatalogError(null)}
-            />
+            <Notice severity="error" title="Catalog refresh failed" body={catalog.error.message} onDismiss={clearCatalogError} />
           </div>
         ) : null}
       </Section>
@@ -924,11 +839,6 @@ function Section({
         </h2>
         {labelAction}
       </div>
-      {/* Light mode: white cards sat on stone-100 at ~3% luminance apart and
-          dissolved into the warm paper (round-2 verdict). A hairline border +
-          soft shadow restores the "raised card" read ADR 0031 called for.
-          Dark works by lightness alone (stone-900 card > stone-950 page), so
-          it keeps just the hairline and drops the shadow (invisible on dark). */}
       <div className="card divide-y divide-line overflow-hidden">
         {children}
       </div>

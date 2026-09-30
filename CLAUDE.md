@@ -13,7 +13,7 @@ session; everything else is a pointer. **Identity is not here** — a facet boot
 | Need | Read |
 |---|---|
 | Architecture, repo layout, tech stack, security posture | `README.md` |
-| Why anything is the way it is — 36 ADRs | `notes/decisions/` (+ its `README.md` index) |
+| Why anything is the way it is — the ADRs | `notes/decisions/` (+ its `README.md` index) |
 | Manual feature walkthrough / demo script | `notes/TESTING.md` |
 | DegreeWorks + Banner API shapes | `notes/degreeworks-api*.md` |
 | Sprite/logo generation pipeline | `tools/mascot/PIPELINE.md` |
@@ -81,13 +81,13 @@ Goal: RamPlan on the Chrome Web Store, **unlisted** (link-installable, invisible
 testers run it against **their own** DegreeWorks. Unlisted was chosen for lower review scrutiny
 and less trademark exposure than a public listing carrying Fordham branding.
 
-**Code state (2026-09-30).** A rework landed on top of the store-ready build: audit fixes
-(0038), motion (0039), panel payloads (0037), and the Plan tab, section cards and where you
-stand (0040). Verified standalone through the render path (every scenario, light and dark,
-400 and 320px, axe on the new states, keyboard walk) with the build clean and the harness out
-of `dist/`. **Not yet checked live in DegreeWorks.** That is Patch's to do by hand before
-submission. Permissions are unchanged (`storage`, `tabs`, `scripting`, `sidePanel`); the key is
-still bring-your-own.
+**Code state (2026-09-30, evening).** Second rework, after Patch's first live check. The Plan
+is now the home tab and fills itself from the audit (0042). There are saved chats (0043), a vector
+Fordhawke with a size setting (0044), and Fordham knowledge from fordham.edu with sources (0045),
+all on one surface-token system (0041). Chat runs on `claude-sonnet-5-5`, and the SDK is 0.130.
+Everything was verified through the render path. **The live DegreeWorks check of this build is
+Patch's**; so is the first real fordham.edu search, because the tests use a fake stream.
+Permissions are unchanged; the key is still bring-your-own.
 
 **Ship blockers — all paperwork:**
 1. **Privacy policy — drafted, needs hosting.** Text lives in `PRIVACY.md`; a self-contained

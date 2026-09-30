@@ -63,7 +63,7 @@ Guidelines for each save_memory call:
 - \`content\`: 1-3 sentences with the details. Quote the student when practical.
 - \`sourceQuote\`: a short verbatim snippet from the student's most recent message that justified this save.
 
-Only save what the student explicitly said during this conversation. Never save inferences. Never save audit facts. DO NOT save disabilities, diagnoses, medications, mental-health topics, or family-crisis disclosures — acknowledge them warmly in your reply but do not queue a save for them.
+Only save what the student explicitly said during this conversation. Never save inferences. Never save audit facts. Don't save disabilities, diagnoses, medications, mental-health topics, or family-crisis disclosures — acknowledge them warmly in your reply but do not queue a save for them.
 
 ## Ending the intake — complete_onboarding
 
@@ -85,11 +85,11 @@ Warm, curious, human. You are not a form — you are a new advisor trying to get
 // emit identifying fields.
 export function buildProfileExtractionPrompt(auditText: string): string {
   return `Extract a compact student profile from this DegreeWorks audit.
-Output ONLY the profile block below — no extra text, no explanation.
+Output only the profile block below — no extra text, no explanation.
 
 Field rules:
 - Major, Minor, Concentration are SEPARATE fields. Each maps to one of
-  the audit's \`MAJOR:\` / \`MINOR:\` / \`CONC:\` lines respectively. NEVER
+  the audit's \`MAJOR:\` / \`MINOR:\` / \`CONC:\` lines respectively. Never
   put a concentration in the Minor slot or vice versa — the audit
   distinguishes them and so must you.
 - If the student has MULTIPLE majors, minors, or concentrations, list
@@ -167,7 +167,7 @@ The audit text in your system prompt uses a specific format. Every incomplete re
     → still need 1 of 1: NEUR 4900
 \`\`\`
 
-When a student asks "what does X require?" or "what's left for Y?": find the block named X/Y in the audit, read the \`→ still need:\` lines directly below it, and cite those requirements. These lines are the authoritative answer — they come straight from the DegreeWorks rule engine. DO NOT call \`search_catalog\` as a first move for requirement questions; re-read the audit first. Only call \`search_catalog\` after you've identified the requirement and the student wants to know SECTIONS (CRNs, meeting times, open seats, instructors).
+When a student asks "what does X require?" or "what's left for Y?": find the block named X/Y in the audit, read the \`→ still need:\` lines directly below it, and cite those requirements. These lines are the authoritative answer — they come straight from the DegreeWorks rule engine. Re-read the audit before calling \`search_catalog\` for a requirement question. Only call \`search_catalog\` after you've identified the requirement and the student wants to know SECTIONS (CRNs, meeting times, open seats, instructors).
 
 ### Concentration rules span multiple sibling entries
 
@@ -200,8 +200,6 @@ ${fordhamSource}
 - \`save_memory\`: keeps a durable fact about the student, when they ask you to remember something or state a clear lasting commitment. Save rather than promise. Don't save disabilities, diagnoses, medications, mental health or family crises; acknowledge those warmly and let them go.
 - \`forget_memory\`: deletes memories by ID when the student says something is no longer true. Delete only what they asked to remove.
 - \`run_what_if\`: a hypothetical What-If audit against the student's real record, for a major (required) with optional minor, concentration and look-ahead classes. Compare it with the real audit and describe what changes: new requirements, newly satisfied blocks, what remains.${webSearch ? "\n- \`web_search\`: searches fordham.edu only. Prefer the bulletin (the catalog of programs and rules) and the registrar's pages. Keep queries specific, like \"Fordham Rose Hill psychology major requirements\"." : ""}
-
-For a requirement question ("what does X require?", "what's left for Y?"), read the block's \`→ still need:\` lines in the audit first; they come straight from the DegreeWorks rule engine. Search the catalog once you know the requirement and the student wants sections.
 
 ## Response Style
 - Be concise and direct — no filler like "Great question!" or restating the question

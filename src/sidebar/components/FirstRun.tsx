@@ -1,15 +1,10 @@
-// Implements: ADR 0024 (the annotated worksheet, not a chat app)
-// Implements: ADR 0032 (step 3 fetches the catalog inline)
+// Implements: ADR 0024 (one setup screen), ADR 0032 (step 3 loads the catalog inline)
 //
-// The old first run showed two overlapping instructions at once: an amber
-// "No audit loaded" card AND a welcome card whose primary button was a dead
-// end ("Waiting for audit…"). This replaces both with one screen: three
-// numbered prerequisites with live checkmarks, so a brand-new student always
-// knows exactly what's missing and where to fix it. The intake button
-// unlocks when the two hard prerequisites are met; the catalog is
-// recommended, not required.
-
-import { useState, useEffect, type ReactNode } from "react";
+// Three prerequisites with live checkmarks, so a new student always knows
+// what's missing and where to fix it. The intake unlocks on the two hard ones
+// (key, audit); the catalog is recommended, not required.
+import type { ReactNode } from "react";
+import { useCatalog, loadCatalogTerm } from "../useCatalog";
 
 export const DEGREEWORKS_URL =
   "https://dw-prod.ec.fordham.edu/responsiveDashboard/worksheets/WEB31";
@@ -33,7 +28,7 @@ function Step({
     <li className="flex items-start gap-3 px-3.5 py-3">
       <span
         aria-hidden
-        className={`w-5 shrink-0 text-center text-xs font-mono mt-0.5 ${
+        className={`mt-0.5 w-5 shrink-0 text-center text-xs tabular-nums ${
           done ? "text-green-700 dark:text-green-400" : "text-ink-2"
         }`}
       >
@@ -71,58 +66,15 @@ export default function FirstRun({
 }) {
   const ready = hasKey && hasAudit;
 
-  // Step 3 fetches the catalog HERE (ADR 0032) — live-test round 1 showed
-  // the detour ("go to Settings, pick a term, come back") losing people at
-  // the exact moment they'd committed to setting up. One button, the same
-  // default term Settings would pick (terms[0] = upcoming). The parent's
-  // catalogCourseCount storage listener flips `hasCatalog`, so the checkmark
-  // needs no wiring of its own.
-  const [defaultTerm, setDefaultTerm] = useState<{ code: string; description: string } | null>(null);
-  const [fetching, setFetching] = useState(false);
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
-  const [fetchError, setFetchError] = useState(false);
-
-  useEffect(() => {
-    if (hasCatalog) return;
-    chrome.runtime.sendMessage({ type: "GET_CATALOG_TERMS" }, (r) => {
-      const t = r?.terms?.[0];
-      if (t?.code && t?.description) setDefaultTerm(t);
-    });
-  }, [hasCatalog]);
-
-  useEffect(() => {
-    const listener = (msg: any) => {
-      switch (msg.type) {
-        case "CATALOG_PROGRESS":
-          setProgress({ done: msg.done ?? 0, total: msg.total ?? 1 });
-          break;
-        case "CATALOG_READY":
-          // hasCatalog flips via the parent's storage listener; this just
-          // retires the local progress UI.
-          setFetching(false);
-          setProgress(null);
-          break;
-        case "CATALOG_ERROR":
-          setFetching(false);
-          setProgress(null);
-          setFetchError(true);
-          break;
-      }
-    };
-    chrome.runtime.onMessage.addListener(listener);
-    return () => chrome.runtime.onMessage.removeListener(listener);
-  }, []);
-
+  // The same default Settings would pick: Banner's newest term. The parent's
+  // storage listener flips `hasCatalog`, so the checkmark needs no wiring here.
+  const catalog = useCatalog();
+  const defaultTerm = catalog.terms[0] ?? null;
+  const progress = catalog.progress;
+  const fetching = !!progress;
+  const fetchError = !!catalog.error;
   function loadCatalog() {
-    if (!defaultTerm || fetching) return;
-    setFetchError(false);
-    setFetching(true);
-    setProgress({ done: 0, total: 1 });
-    chrome.runtime.sendMessage({
-      type: "REFRESH_CATALOG",
-      term: defaultTerm.code,
-      termLabel: defaultTerm.description,
-    });
+    if (defaultTerm && !fetching) loadCatalogTerm(defaultTerm.code);
   }
   const settingsLink = (
     <button

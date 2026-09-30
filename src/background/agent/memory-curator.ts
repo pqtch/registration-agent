@@ -83,7 +83,7 @@ const CURATOR_SYSTEM_PROMPT = `You are a memory curator for an AI academic advis
 
 You split what you extract into three arrays:
 
-1. **hardFacts** — explicit, student-stated durable facts. These go straight into the long-term memory store. Use this ONLY when the student stated something clearly in their own words AND it is not derivable from their DegreeWorks audit.
+1. **hardFacts** — explicit, student-stated durable facts. These go straight into the long-term memory store. Use this only when the student stated something clearly in their own words AND it is not derivable from their DegreeWorks audit.
 
 2. **provisionalHits** — soft signals. The student hinted at an interest, asked about a subject area more than once, or gestured at a topic they might care about. These are NOT saved as full memories yet — they go into a provisional tally. When the same topic is reinforced across multiple turns (threshold: ${PROMOTION_THRESHOLD} mentions with consistent framing), it gets promoted to a real memory automatically. Your job on each turn is just to identify the topic + a short framing snippet; the promotion math is handled for you.
 
@@ -91,7 +91,7 @@ You split what you extract into three arrays:
 
 ## Where facts come from — READ THIS FIRST
 
-**Only the student's own messages are a source of facts.** The advisor's responses are context for interpreting what the student meant, but the advisor's responses are NEVER evidence of student facts. The advisor's responses are grounded in the student's DegreeWorks audit, which the advisor already has on every turn. If a fact appears in the advisor's reply but the student did not state it themselves in their own words, DO NOT extract it — it was already in the audit.
+**Only the student's own messages are a source of facts.** The advisor's responses are context for interpreting what the student meant, but the advisor's responses are never evidence of student facts. The advisor's responses are grounded in the student's DegreeWorks audit, which the advisor already has on every turn. If a fact appears in the advisor's reply but the student did not state it themselves in their own words, DO NOT extract it — it was already in the audit.
 
 Before you extract any candidate, apply this two-part check:
 1. **Did the STUDENT say this in their own words?** If no, drop it.
@@ -295,7 +295,7 @@ Both arrays may be empty. Both arrays empty is the common, correct answer for mo
 
 ### Description quality — this matters
 
-The description is the ONLY text the main advisor model sees until it calls \`recall_memory\`. If descriptions are vague, the advisor will skip recall and hallucinate from the index alone. Descriptions must be specific enough that match/no-match is obvious from the description alone.
+The description is the only text the main advisor model sees until it calls \`recall_memory\`. If descriptions are vague, the advisor will skip recall and hallucinate from the index alone. Descriptions must be specific enough that match/no-match is obvious from the description alone.
 
 BAD (too vague — forces recall just to check relevance):
 - "academic interests"
@@ -309,7 +309,7 @@ GOOD (specific — advisor can route on description alone):
 
 ## Return format
 
-Return ONLY the JSON object. No preamble, no explanation, no markdown fences. Just the JSON.`;
+Return only the JSON object. No preamble, no explanation, no markdown fences. Just the JSON.`;
 
 // ─── Main Entry Point ────────────────────────────────────────────────────────
 
@@ -538,45 +538,14 @@ function validateProvisionalHit(raw: unknown): CuratedProvisionalHit | null {
 
 // ─── Logging ─────────────────────────────────────────────────────────────────
 
-function logResult(result: CuratorResult, rawText: string, willWrite: boolean): void {
-  const tag = willWrite ? "[Curator] WRITE" : "[Curator] STUB";
+// Counts only: what the curator saved is the student's own information, and a
+// console is no place for it.
+function logResult(result: CuratorResult, _rawText: string, willWrite: boolean): void {
   const { hardFacts, provisionalHits, promoted, absorbed } = result;
-
-  if (hardFacts.length === 0 && provisionalHits.length === 0) {
-    console.log(`${tag} — no candidates (empty turn).`);
-    if (rawText && !/^\{\s*"hardFacts"\s*:\s*\[\s*\]\s*,\s*"provisionalHits"\s*:\s*\[\s*\]\s*\}$/.test(rawText)) {
-      console.log(`${tag} raw response was:`, rawText);
-    }
-    return;
-  }
-
-  if (hardFacts.length > 0) {
-    console.log(`${tag} — ${hardFacts.length} hard fact${hardFacts.length === 1 ? "" : "s"}:`);
-    for (const f of hardFacts) {
-      console.log(`  • [${f.type}] ${f.description}  (topic: ${f.topic || "—"})`);
-      console.log(`    ${f.content}`);
-    }
-  }
-
-  if (provisionalHits.length > 0) {
-    console.log(`${tag} — ${provisionalHits.length} provisional hit${provisionalHits.length === 1 ? "" : "s"}:`);
-    for (const h of provisionalHits) {
-      console.log(`  • [${h.proposedType}] ${h.topic} — ${h.description}`);
-      console.log(`    framing: "${h.framing}"`);
-    }
-  }
-
-  if (willWrite) {
-    if (promoted.length > 0) {
-      console.log(`${tag} — ${promoted.length} promoted to memories:`);
-      for (const m of promoted) {
-        console.log(`  → #${m.id} [${m.type}] ${m.description}`);
-      }
-    }
-    if (absorbed > 0) {
-      console.log(`${tag} — ${absorbed} provisional row${absorbed === 1 ? "" : "s"} absorbed by new hard facts.`);
-    }
-  }
+  console.log(
+    `[Curator] ${willWrite ? "write" : "stub"}: ${hardFacts.length} facts, ${provisionalHits.length} provisional, ` +
+      `${promoted.length} promoted, ${absorbed} absorbed`
+  );
 }
 
 // Re-export so callers importing the curator don't also need memory-store.

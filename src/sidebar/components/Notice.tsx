@@ -25,7 +25,7 @@ export type NoticeAction =
 // amber-500 measured 2.15:1 on white and is why `warn` uses amber-600.
 const SEVERITY = {
   info: {
-    rule: "border-stone-500 dark:border-stone-400",
+    rule: "border-ink-3",
     title: "text-ink",
   },
   warn: {
@@ -93,7 +93,7 @@ export default function Notice({
           onClick={onDismiss}
           aria-label="Dismiss"
           // 24×24: the WCAG 2.2 AA target floor (2.5.8); the glyph alone was ~8px wide.
-          className="focus-ring shrink-0 inline-flex items-center justify-center w-6 h-6 rounded text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-100"
+          className="focus-ring shrink-0 inline-flex items-center justify-center w-6 h-6 rounded text-ink-3 hover:text-ink"
         >
           ×
         </button>
