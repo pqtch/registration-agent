@@ -61,7 +61,7 @@ function Message({
             the bubble was "sent". Grey, not maroon (ADR 0032, amending 0024):
             in the Claude app the user's turn is a quiet quote to be answered,
             not the loudest object on the page — maroon stays an accent. */}
-        <div className="max-w-[85%] px-3.5 py-2 rounded-[18px] bg-stone-200 text-stone-900 dark:bg-stone-800 dark:text-stone-100 text-[13px] leading-relaxed whitespace-pre-wrap origin-bottom-right">
+        <div className="max-w-[85%] px-3.5 py-2 rounded-[18px] bg-ink/[0.07] text-ink text-[13px] leading-relaxed whitespace-pre-wrap origin-bottom-right">
           {message.content}
         </div>
       </div>
@@ -139,6 +139,26 @@ function Message({
           >
             {personalize(message.content, firstName, advisorEmail, advisorName)}
           </Markdown>
+        </div>
+      )}
+      {message.sources && message.sources.length > 0 && (
+        <div className="mt-2 max-w-[65ch]">
+          <p className="text-xs font-semibold text-ink-2">Sources</p>
+          <ol className="mt-0.5 space-y-0.5">
+            {message.sources.map((src) => (
+              <li key={src.url} className="truncate text-xs">
+                <a
+                  href={src.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="focus-ring rounded text-fordham-maroon underline decoration-fordham-maroon/30 underline-offset-2 hover:decoration-fordham-maroon dark:text-fordham-maroon-ink dark:decoration-fordham-maroon-ink/40"
+                >
+                  {src.title}
+                </a>
+                <span className="text-ink-3"> · {new URL(src.url).hostname.replace(/^www\./, "")}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       )}
     </div>

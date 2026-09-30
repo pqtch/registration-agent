@@ -21,7 +21,7 @@ function describeSearch(input: Record<string, unknown>): string {
     parts.push(`${input.min_number}–${input.max_number}`);
   else if (input.min_number) parts.push(`≥${input.min_number}`);
   else if (input.max_number) parts.push(`≤${input.max_number}`);
-  if (input.keyword) parts.push(`"${input.keyword}"`);
+  if (input.keyword) parts.push(`“${input.keyword}”`);
   if (Array.isArray(input.days) && input.days.length > 0)
     parts.push(daysOf(input.days));
   if (Array.isArray(input.attributes) && input.attributes.length > 0)
@@ -62,6 +62,11 @@ function describe(ev: ToolEvent): { verb: string; detail: string; done: string }
       const major = typeof ev.input.major === "string" ? ev.input.major : "";
       return { verb: "What-if audit", detail: major, done: "done" };
     }
+    case "web_search": {
+      const q = typeof ev.input.query === "string" ? ev.input.query : "";
+      const n = ev.courseCount ?? 0;
+      return { verb: "Searched fordham.edu", detail: q ? `“${q}”` : "", done: `${n} ${n === 1 ? "page" : "pages"}` };
+    }
     case "list_attributes":
       return { verb: "Listed attributes", detail: "", done: `${ev.courseCount ?? 0} found` };
     default:
@@ -83,27 +88,13 @@ export default function Citation({ event }: { event: ToolEvent }) {
     ? "text-red-700 dark:text-red-400"
     : pending
       ? "text-ink-4"
-      : "text-ink-2";
+      : "text-ink-3";
 
   return (
-    <p className={`text-[11px] uppercase tracking-wider leading-relaxed ${ink}`}>
-      <span className="font-semibold">{verb}</span>
-      {detail && (
-        <>
-          {" · "}
-          <span className="font-mono normal-case tracking-normal">{detail}</span>
-        </>
-      )}
-      {failed ? (
-        <> · failed</>
-      ) : pending ? (
-        <span aria-hidden>…</span>
-      ) : (
-        <>
-          {" · "}
-          <span className="font-mono tracking-normal">{done}</span>
-        </>
-      )}
+    <p className={`text-xs leading-relaxed ${ink}`}>
+      <span className="font-medium">{verb}</span>
+      {detail && <> · {detail}</>}
+      {failed ? <> · failed</> : pending ? <span aria-hidden>…</span> : <span className="tabular-nums"> · {done}</span>}
     </p>
   );
 }

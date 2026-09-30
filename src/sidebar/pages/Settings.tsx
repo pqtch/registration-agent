@@ -75,6 +75,15 @@ export default function Settings() {
   // Theme preference: light / dark / system (default).
   const [theme, setTheme] = useState<ThemePreference>("system");
   const [mascotSize, setMascotSize] = useMascotSize();
+  const [fordhamSearch, setFordhamSearch] = useState(true);
+  useEffect(() => {
+    chrome.storage.local.get("fordhamSearch", (r) => setFordhamSearch(r.fordhamSearch !== false));
+  }, []);
+  const toggleFordhamSearch = () => {
+    const next = !fordhamSearch;
+    setFordhamSearch(next);
+    chrome.storage.local.set({ fordhamSearch: next });
+  };
 
   // [NAME]/[ADVISOR]/[ADVISOR_EMAIL] render-time substitution for the
   // profile card (ADR 0032; Patch-approved). Same storage keys the chat
@@ -500,27 +509,7 @@ export default function Settings() {
           <span className="text-sm text-ink">
             Auto-save memories from chat
           </span>
-          <button
-            onClick={toggleAutoSave}
-            role="switch"
-            aria-checked={autoSaveEnabled}
-            aria-label="Auto-save memories from chat"
-            /* Neutral, not maroon (ADR 0032, Patch ruling: "grey… maroon
-               links are good") — a switch is state, not an accent. */
-            className={`focus-ring shrink-0 relative inline-flex h-6 w-10 rounded-full transition-colors duration-200 ${
-              autoSaveEnabled
-                ? "bg-stone-900 dark:bg-stone-100"
-                : "bg-stone-300 dark:bg-stone-600"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 inline-block h-5 w-5 rounded-full shadow transition-transform duration-200 ease-spring ${
-                autoSaveEnabled
-                  ? "translate-x-[18px] bg-raised"
-                  : "translate-x-0.5 bg-white"
-              }`}
-            />
-          </button>
+          <Switch on={autoSaveEnabled} onToggle={toggleAutoSave} label="Auto-save memories from chat" />
         </label>
 
         {memories.length === 0 ? (
@@ -774,6 +763,16 @@ export default function Settings() {
           </div>
         ) : null}
       </Section>
+      <Section
+        label="Fordham search"
+        footer="The advisor can look up program requirements, core rules and registration policy on fordham.edu, and cite the pages it used. Each search costs a cent on your API key, plus the text it reads."
+      >
+        <label className="flex cursor-pointer items-center justify-between gap-3 px-4 py-2.5">
+          <span className="text-sm text-ink">Search fordham.edu</span>
+          <Switch on={fordhamSearch} onToggle={toggleFordhamSearch} label="Search fordham.edu" />
+        </label>
+      </Section>
+
 
       {/* Raw Audit Text */}
       <Section
@@ -835,6 +834,25 @@ export default function Settings() {
       </p>
 
     </div>
+  );
+}
+
+// A switch is state, not an accent: neutral ink, never maroon (ADR 0032).
+function Switch({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) {
+  return (
+    <button
+      onClick={onToggle}
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      className={`focus-ring relative inline-flex h-6 w-10 shrink-0 rounded-full transition-colors duration-200 ${on ? "bg-ink" : "bg-line-2"}`}
+    >
+      <span
+        className={`absolute top-0.5 inline-block h-5 w-5 rounded-full shadow-lift transition-transform duration-200 ease-spring ${
+          on ? "translate-x-[18px] bg-paper" : "translate-x-0.5 bg-white"
+        }`}
+      />
+    </button>
   );
 }
 

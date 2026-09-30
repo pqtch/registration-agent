@@ -97,6 +97,8 @@ export interface ConversationMessage {
   // renders these as chips above the message body. Stripped before the list
   // is sent to Anthropic — see service-worker.ts handleAIChat.
   toolEvents?: ToolEvent[];
+  // fordham.edu pages the answer cited (ADR 0045). Panel-only, like toolEvents.
+  sources?: { url: string; title: string }[];
   // When present, this message renders as a system-action bubble instead of
   // AI prose (e.g. onboarding batch-save at end of intake). Streaming handlers
   // treat systemAction bubbles as non-append targets so the next AI chunk
@@ -121,7 +123,7 @@ export function conversationalOnly(
   // content only, so they are dropped here rather than shipped for nothing.
   return messages
     .filter((m) => !m.systemAction)
-    .map(({ toolEvents: _panelOnly, ...turn }) => turn);
+    .map(({ toolEvents: _panelOnly, sources: _cited, ...turn }) => turn);
 }
 
 export interface SystemActionItem {

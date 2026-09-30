@@ -338,3 +338,82 @@ describe("handleAIChat loop-exit notices", () => {
     }
   });
 });
+
+function eventStream(final: AnyMessage, events: AnyMessage[]) {
+  return {
+    async *[Symbol.asyncIterator]() {
+      for (const e of events) yield e;
+    },
+    finalMessage: async () => final,
+  };
+}
+
+const citedAnswer = message("end_turn", [
+  {
+    type: "text",
+    text: "The major needs 10 courses.",
+    citations: [
+      { type: "web_search_result_location", url: "https://bulletin.fordham.edu/psych", title: "Psychology | Bulletin", cited_text: "", encrypted_index: "" },
+      { type: "web_search_result_location", url: "https://bulletin.fordham.edu/psych", title: "Psychology | Bulletin", cited_text: "", encrypted_index: "" },
+    ],
+  },
+]);
+
+describe("handleAIChat Fordham search (ADR 0045)", () => {
+  it("offers fordham.edu search, shows a chip with the query and result count, and lists cited pages once", async () => {
+    streamMock.mockReturnValue(
+      eventStream(citedAnswer, [
+        { type: "content_block_start", index: 0, content_block: { type: "server_tool_use", id: "srv_1", name: "web_search", input: {} } },
+        { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: '{"query":"psychology ' } },
+        { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: 'major"}' } },
+        { type: "content_block_stop", index: 0 },
+        {
+          type: "content_block_start",
+          index: 1,
+          content_block: { type: "web_search_tool_result", tool_use_id: "srv_1", content: [{ url: "https://bulletin.fordham.edu/psych", title: "P" }, { url: "https://x.fordham.edu", title: "X" }] },
+        },
+      ])
+    );
+    await handleAIChat(USER_TURN, "audit", "profile", "normal", deps);
+
+    const tools = streamMock.mock.calls[0][0].tools as { name: string; allowed_domains?: string[] }[];
+    expect(tools.find((t) => t.name === "web_search")?.allowed_domains).toEqual(["fordham.edu"]);
+    expect(broadcastsOfType("AI_TOOL_USE")).toEqual([{ type: "AI_TOOL_USE", name: "web_search", input: { query: "psychology major" } }]);
+    expect(broadcastsOfType("AI_TOOL_RESULT")).toEqual([{ type: "AI_TOOL_RESULT", name: "web_search", courseCount: 2 }]);
+    expect(broadcastsOfType("AI_SOURCES")).toEqual([
+      { type: "AI_SOURCES", sources: [{ url: "https://bulletin.fordham.edu/psych", title: "Psychology | Bulletin" }] },
+    ]);
+  });
+
+  it("leaves search out when the student turned it off", async () => {
+    (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockResolvedValue({ fordhamSearch: false });
+    streamMock.mockReturnValue(fakeStream(message("end_turn")));
+    await handleAIChat(USER_TURN, "audit", "profile", "normal", deps);
+    const tools = streamMock.mock.calls[0][0].tools as { name: string }[];
+    expect(tools.some((t) => t.name === "web_search")).toBe(false);
+  });
+
+  it("retries without search, and says so, when the organization has web search off", async () => {
+    const off = Object.assign(new Error("web search is not enabled for this organization"), { status: 400 });
+    streamMock.mockReturnValueOnce(fakeStream(message("end_turn"), { throws: off })).mockReturnValueOnce(fakeStream(message("end_turn")));
+    await handleAIChat(USER_TURN, "audit", "profile", "normal", deps);
+
+    expect(streamMock).toHaveBeenCalledTimes(2);
+    const retryTools = streamMock.mock.calls[1][0].tools as { name: string }[];
+    expect(retryTools.some((t) => t.name === "web_search")).toBe(false);
+    expect(broadcastsOfType("AI_NOTICE")).toEqual([{ type: "AI_NOTICE", kind: "no-web" }]);
+    expect(broadcastsOfType("AI_ERROR")).toHaveLength(0);
+    expect(broadcastsOfType("AI_DONE")).toHaveLength(1);
+  });
+
+  it("resumes a paused turn by sending it back, with no new user message", async () => {
+    const paused = message("pause_turn", [{ type: "server_tool_use", id: "srv_1", name: "web_search", input: { query: "q" } }]);
+    streamMock.mockReturnValueOnce(fakeStream(paused)).mockReturnValueOnce(fakeStream(message("end_turn")));
+    await handleAIChat(USER_TURN, "audit", "profile", "normal", deps);
+
+    expect(streamMock).toHaveBeenCalledTimes(2);
+    const resent = streamMock.mock.calls[1][0].messages as { role: string }[];
+    expect(resent.map((m) => m.role)).toEqual(["user", "assistant"]);
+    expect(broadcastsOfType("AI_DONE")).toHaveLength(1);
+  });
+});

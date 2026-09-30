@@ -12,6 +12,7 @@
 //   /src/sidebar/dev.html?state=empty           ready, suggestions visible
 //   /src/sidebar/dev.html?state=chat            restored conversation
 //   /src/sidebar/dev.html?state=whatif          fast run_what_if (pose-hold test)
+//   /src/sidebar/dev.html?state=fordham         a fordham.edu search with cited sources (autosend)
 //   /src/sidebar/dev.html?state=saves           onboarding save batch bubble
 //   /src/sidebar/dev.html?state=error           AI_CHAT replies with AI_ERROR
 //   /src/sidebar/dev.html?state=toolcap         AI_CHAT ends at the tool cap
@@ -318,6 +319,37 @@ function whatIfScript(): Broadcast[] {
   return steps;
 }
 
+// A fordham.edu lookup (ADR 0045). The pages are fabricated stand-ins, not
+// quotes from Fordham's real bulletin.
+const FORDHAM_PROSE = (
+  "The psychology major asks for 10 courses: an intro sequence, statistics and research methods, and upper-level electives across areas [mock]. " +
+  "Your CISC credits won't count toward it, but your core is already done."
+).split(" ");
+
+function fordhamScript(): Broadcast[] {
+  const steps: Broadcast[] = [
+    { delay: 400, msg: { type: "AI_TOOL_USE", name: "web_search", input: { query: "Fordham Rose Hill psychology major requirements" } } },
+    { delay: 1600, msg: { type: "AI_TOOL_RESULT", name: "web_search", courseCount: 4 } },
+  ];
+  let t = 1900;
+  for (const w of FORDHAM_PROSE) {
+    steps.push({ delay: t, msg: { type: "AI_CHUNK", delta: w + " " } });
+    t += 40;
+  }
+  steps.push({
+    delay: t + 100,
+    msg: {
+      type: "AI_SOURCES",
+      sources: [
+        { url: "https://bulletin.fordham.edu/mock/psychology-major", title: "Psychology Major (mock page)" },
+        { url: "https://www.fordham.edu/mock/registrar/policies", title: "Registration Policies (mock page)" },
+      ],
+    },
+  });
+  steps.push({ delay: t + 300, msg: { type: "AI_DONE" } });
+  return steps;
+}
+
 // ─── Scenarios ────────────────────────────────────────────────────────────────
 
 const READY_BASE: Scenario = {
@@ -351,6 +383,11 @@ const SCENARIOS: Record<string, Scenario> = {
   chat: {
     ...READY_BASE,
     session: { chat_messages: CHAT_SESSION },
+  },
+  fordham: {
+    ...READY_BASE,
+    onChat: fordhamScript(),
+    autosend: true,
   },
   whatif: {
     ...READY_BASE,

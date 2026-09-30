@@ -59,6 +59,7 @@ const TOOL_PHRASES: Record<string, string> = {
   save_memory: "Saving a memory",
   forget_memory: "Updating my memory",
   run_what_if: "Running a what-if audit",
+  web_search: "Searching fordham.edu",
 };
 
 // The intake conversation lives in session storage only; saved chats are in
@@ -88,7 +89,7 @@ export default function AuditChat({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [turnError, setTurnError] = useState<string | null>(null);
-  const [turnNotice, setTurnNotice] = useState<"tool-cap" | "truncated" | null>(null);
+  const [turnNotice, setTurnNotice] = useState<"tool-cap" | "truncated" | "no-web" | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [deleted, setDeleted] = useState<SavedChat | null>(null); // undo beats confirm
 
@@ -312,7 +313,15 @@ export default function AuditChat({
           setLoading(false);
           break;
         case "AI_NOTICE":
-          setTurnNotice(message.kind === "tool-cap" ? "tool-cap" : "truncated");
+          setTurnNotice(message.kind === "tool-cap" || message.kind === "no-web" ? message.kind : "truncated");
+          break;
+        case "AI_SOURCES":
+          if (!Array.isArray(message.sources)) break;
+          setMessages((prev) => {
+            const i = prev.map((m) => m.role === "assistant" && !m.systemAction).lastIndexOf(true);
+            if (i < 0) return prev;
+            return [...prev.slice(0, i), { ...prev[i], sources: message.sources }, ...prev.slice(i + 1)];
+          });
           break;
         case "AI_TOOL_USE": {
           if (message.name === "complete_onboarding") break; // shown by the saves bubble
@@ -723,7 +732,14 @@ export default function AuditChat({
                   />
                 );
               })()}
-            {turnNotice && (
+            {turnNotice === "no-web" && (
+              <Notice
+                severity="info"
+                title="Web search is turned off for your API key's organization, so this answer used only your audit and the catalog."
+                onDismiss={() => setTurnNotice(null)}
+              />
+            )}
+            {(turnNotice === "tool-cap" || turnNotice === "truncated") && (
               <Notice
                 severity="info"
                 title={turnNotice === "tool-cap" ? "Paused before finishing: too many lookups for one answer." : "The answer was cut off at its length limit."}

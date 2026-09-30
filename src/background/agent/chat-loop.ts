@@ -19,6 +19,7 @@ import type { ChatMode, StudentGoal, ToolContext } from "./tools/types";
 import { withKeepalive } from "../keepalive";
 import type { AuditSummary } from "./audit-summary";
 import { planKey, planPromptText, termLabel, type PlannedSection } from "../../shared/plan";
+import { FORDHAM_SEARCH_KEY, FORDHAM_SEARCH_TOOL, citedSources, isWebSearchDisabled, searchResults } from "./web-search";
 
 // Worker-owned capabilities the chat loop reaches for. Injected (not imported)
 // to keep this module free of a service-worker dependency cycle.
@@ -103,9 +104,14 @@ export async function handleAIChat(
     // still available (Sonnet needs it to reference what's already known about
     // the student) but memory-writing routes via save_memory instead of the
     // curator. Catalog search stays available for any follow-ups that need it.
+    // Fordham search (ADR 0045): the advisor's own turns only, on unless the
+    // student turned it off. A 400 below turns it off for this turn.
+    const searchPref = await chrome.storage.local.get(FORDHAM_SEARCH_KEY);
+    let webSearch = mode === "normal" && searchPref[FORDHAM_SEARCH_KEY] !== false;
+
     const system: Anthropic.Messages.TextBlockParam[] = mode === "onboarding"
       ? buildOnboardingSystemBlocks({ auditText })
-      : buildAdvisorSystemBlocks({ profile, memoryIndex, auditText, planText });
+      : buildAdvisorSystemBlocks({ profile, memoryIndex, auditText, planText, webSearch });
 
     // Capabilities every tool executor may reach for. Worker-owned; injected.
     const ctx: ToolContext = {
@@ -130,35 +136,47 @@ export async function handleAIChat(
     // The multi-round tool loop, hoisted into a closure so the WHOLE loop can sit
     // inside one withKeepalive() (see the call below). Mutates `convo`; returns
     // Claude's last message, or null if the loop never ran.
+    const turnMessages: Anthropic.Messages.Message[] = [];
     const runToolRounds = async (): Promise<Anthropic.Messages.Message | null> => {
       let lastMessage: Anthropic.Messages.Message | null = null;
 
       // Cap at 5 tool-use rounds per user turn — generous but prevents runaway.
       for (let round = 0; round < 5; round++) {
-        const stream = await client.messages.stream(
-          {
-            model: "claude-sonnet-5-5",
-            // Thinking counts toward max_tokens on Sonnet 5.5, so the cap sizes
-            // reasoning plus reply. Medium effort: multistep tool use over the
-            // audit, where a cheap wrong count costs the student more than latency.
-            max_tokens: 16000,
-            output_config: { effort: "medium" },
-            system,
-            tools: TOOLSETS[mode].map((t) => t.schema),
-            messages: convo,
-          },
-          { signal: ctrl.signal }
-        );
+        const request = () =>
+          client.messages.stream(
+            {
+              model: "claude-sonnet-5-5",
+              // Thinking counts toward max_tokens on Sonnet 5.5, so the cap sizes
+              // reasoning plus reply. Medium effort: multistep tool use over the
+              // audit, where a cheap wrong count costs the student more than latency.
+              max_tokens: 16000,
+              output_config: { effort: "medium" },
+              system,
+              tools: [...TOOLSETS[mode].map((t) => t.schema), ...(webSearch ? [FORDHAM_SEARCH_TOOL] : [])],
+              messages: convo,
+            },
+            { signal: ctrl.signal }
+          );
 
-        for await (const chunk of stream) {
-          if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
-            deps.broadcast({ type: "AI_CHUNK", delta: chunk.delta.text });
-          }
+        let final: Anthropic.Messages.Message;
+        try {
+          final = await streamRound(request(), deps.broadcast);
+        } catch (err) {
+          if (!webSearch || !isWebSearchDisabled(err)) throw err;
+          // An admin turned web search off for this key's organization.
+          webSearch = false;
+          deps.broadcast({ type: "AI_NOTICE", kind: "no-web" });
+          final = await streamRound(request(), deps.broadcast);
         }
-
-        const final = await stream.finalMessage();
         lastMessage = final;
+        turnMessages.push(final);
 
+        // A long server-side search pauses the turn; send it back as it stands
+        // and the API resumes it. No new user message.
+        if (final.stop_reason === "pause_turn") {
+          convo.push({ role: "assistant", content: final.content });
+          continue;
+        }
         if (final.stop_reason !== "tool_use") break;
 
         // Append Claude's partial turn (may contain text + tool_use blocks)
@@ -269,6 +287,9 @@ export async function handleAIChat(
       return;
     }
 
+    const sources = citedSources(turnMessages);
+    if (sources.length) deps.broadcast({ type: "AI_SOURCES", sources });
+
     deps.broadcast({ type: "AI_DONE" });
 
     // Fire-and-forget memory curation. Haiku scans the just-completed turn
@@ -369,3 +390,45 @@ async function loadPlanText(): Promise<string> {
   return planPromptText((p[key] as PlannedSection[] | undefined) ?? [], label, registered);
 }
 
+
+// One streamed request: text deltas go to the panel as they arrive, and each
+// Fordham search shows as a chip, opened when its query is complete and closed
+// when its results land (or, failing that, when the round ends).
+async function streamRound(
+  stream: ReturnType<Anthropic["messages"]["stream"]>,
+  broadcast: ChatDeps["broadcast"]
+): Promise<Anthropic.Messages.Message> {
+  const searches = new Map<number, { id: string; json: string }>();
+  const open = new Set<string>();
+  for await (const ev of stream) {
+    if (ev.type === "content_block_start") {
+      const b = ev.content_block;
+      if (b.type === "server_tool_use" && b.name === "web_search") searches.set(ev.index, { id: b.id, json: "" });
+      if (b.type === "web_search_tool_result" && open.delete(b.tool_use_id)) {
+        const c = b.content;
+        broadcast({ type: "AI_TOOL_RESULT", name: "web_search", courseCount: Array.isArray(c) ? c.length : 0, ...(Array.isArray(c) ? {} : { error: c.error_code }) });
+      }
+    } else if (ev.type === "content_block_delta") {
+      if (ev.delta.type === "text_delta") broadcast({ type: "AI_CHUNK", delta: ev.delta.text });
+      else if (ev.delta.type === "input_json_delta" && searches.has(ev.index)) searches.get(ev.index)!.json += ev.delta.partial_json;
+    } else if (ev.type === "content_block_stop" && searches.has(ev.index)) {
+      const s = searches.get(ev.index)!;
+      let input: Record<string, unknown> = {};
+      try {
+        input = s.json ? JSON.parse(s.json) : {};
+      } catch {
+        /* a truncated query still gets a chip */
+      }
+      open.add(s.id);
+      broadcast({ type: "AI_TOOL_USE", name: "web_search", input });
+      searches.delete(ev.index);
+    }
+  }
+  const final = await stream.finalMessage();
+  const results = searchResults(final);
+  for (const id of open) {
+    const r = results.get(id);
+    broadcast({ type: "AI_TOOL_RESULT", name: "web_search", courseCount: r?.count ?? 0, ...(r?.error ? { error: r.error } : {}) });
+  }
+  return final;
+}
