@@ -44,4 +44,8 @@ export interface ToolDef {
   execute(input: unknown, ctx: ToolContext): Promise<string>;  // returns result JSON/text
   resultCount?(raw: unknown): number;  // parses execute's return for the AI_TOOL_RESULT chip
   silentIn?: ChatMode[];               // e.g. save_memory in "onboarding"
+  // Optional (ADR 0037): run once, return the model's result AND a panel
+  // payload for the sidebar. When present the chat loop calls this instead of
+  // execute(); `result` must be exactly what execute() would have returned.
+  executeWithPanel?(input: unknown, ctx: ToolContext): Promise<{ result: string; panel: unknown }>;
 }

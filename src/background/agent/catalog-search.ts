@@ -11,7 +11,7 @@ import {
   getCoursesBySubject,
   getCourse,
 } from "../../shared/db";
-import type { Course, Section, Day } from "../../shared/types";
+import type { Course, Section, Day, PanelCourse } from "../../shared/types";
 
 export interface CatalogSearchInput {
   subject?: string;
@@ -95,9 +95,57 @@ async function ensureCatalogLoaded(): Promise<void> {
   }
 }
 
+// One matching pass, two projections (ADR 0037): the model's compact JSON and
+// the panel's structured cards come from the SAME courses and sections, so the
+// cards can never show something the model didn't see.
+interface SearchMatch {
+  course: Course;
+  totalSections: number;
+  sections: Section[]; // already filtered and capped
+}
+
 export async function executeCatalogSearch(
   input: CatalogSearchInput
 ): Promise<CatalogSearchResult[]> {
+  return (await matchCatalog(input)).map(toModelResult);
+}
+
+export async function executeCatalogSearchWithPanel(
+  input: CatalogSearchInput
+): Promise<{ results: CatalogSearchResult[]; panel: PanelCourse[] }> {
+  const matches = await matchCatalog(input);
+  return { results: matches.map(toModelResult), panel: matches.map(toPanelCourse) };
+}
+
+function toModelResult(m: SearchMatch): CatalogSearchResult {
+  return {
+    courseCode: m.course.courseCode,
+    title: m.course.title,
+    credits: m.course.credits,
+    totalSections: m.totalSections,
+    sections: m.sections.map(compactSection),
+  };
+}
+
+function toPanelCourse(m: SearchMatch): PanelCourse {
+  return {
+    courseCode: m.course.courseCode,
+    title: m.course.title,
+    credits: m.course.credits,
+    totalSections: m.totalSections,
+    sections: m.sections.map((s) => ({
+      crn: s.crn,
+      instructor: s.instructor,
+      seats: s.seatsAvailable,
+      campus: s.campus,
+      mode: s.deliveryMode,
+      meetings: s.meetings,
+      attributes: s.attributes ?? [],
+    })),
+  };
+}
+
+async function matchCatalog(input: CatalogSearchInput): Promise<SearchMatch[]> {
   const limit = Math.min(input.limit ?? 20, 40);
 
   // Fast path: exact course code lookup
@@ -106,13 +154,7 @@ export async function executeCatalogSearch(
     const course = await getCourse(normalized);
     if (course) {
       return [
-        {
-          courseCode: course.courseCode,
-          title: course.title,
-          credits: course.credits,
-          totalSections: course.sections.length,
-          sections: course.sections.slice(0, 8).map(compactSection),
-        },
+        { course, totalSections: course.sections.length, sections: course.sections.slice(0, 8) },
       ];
     }
     // Course not found — could be a typo OR an empty catalog. Probe before
@@ -137,7 +179,7 @@ export async function executeCatalogSearch(
   const keywordLower = input.keyword?.toLowerCase();
   const dayFilter = input.days && input.days.length > 0 ? input.days : null;
 
-  const results: CatalogSearchResult[] = [];
+  const results: SearchMatch[] = [];
   for (const course of courses) {
     const num = parseCourseNumber(course.courseCode);
     if (input.min_number != null && num < input.min_number) continue;
@@ -157,13 +199,7 @@ export async function executeCatalogSearch(
     }
     if (sections.length === 0) continue;
 
-    results.push({
-      courseCode: course.courseCode,
-      title: course.title,
-      credits: course.credits,
-      totalSections: sections.length,
-      sections: sections.slice(0, 5).map(compactSection),
-    });
+    results.push({ course, totalSections: sections.length, sections: sections.slice(0, 5) });
 
     if (results.length >= limit) break;
   }

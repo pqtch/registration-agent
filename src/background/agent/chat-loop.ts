@@ -17,6 +17,7 @@ import { buildAdvisorSystemBlocks, buildOnboardingSystemBlocks } from "./prompts
 import { TOOLSETS, REGISTRY } from "./tools";
 import type { ChatMode, StudentGoal, ToolContext } from "./tools/types";
 import { withKeepalive } from "../keepalive";
+import { planKey, planPromptText, termLabel, type PlannedSection } from "../../shared/plan";
 
 // Worker-owned capabilities the chat loop reaches for. Injected (not imported)
 // to keep this module free of a service-worker dependency cycle.
@@ -95,6 +96,7 @@ export async function handleAIChat(
     // via the recall_memory tool. Empty string when no memories exist yet.
     const memories = await loadMemories();
     const memoryIndex = memoriesToIndexText(memories);
+    const planText = await loadPlanText();
 
     // Onboarding mode swaps out the system prompt and the tool set. The audit is
     // still available (Sonnet needs it to reference what's already known about
@@ -102,7 +104,7 @@ export async function handleAIChat(
     // curator. Catalog search stays available for any follow-ups that need it.
     const system: Anthropic.Messages.TextBlockParam[] = mode === "onboarding"
       ? buildOnboardingSystemBlocks({ auditText })
-      : buildAdvisorSystemBlocks({ profile, memoryIndex, auditText });
+      : buildAdvisorSystemBlocks({ profile, memoryIndex, auditText, planText });
 
     // Capabilities every tool executor may reach for. Worker-owned; injected.
     const ctx: ToolContext = {
@@ -176,8 +178,12 @@ export async function handleAIChat(
           try {
             let resultJson: string;
             let resultCount = 0;
+            let panel: unknown;
 
-            if (def) {
+            if (def?.executeWithPanel) {
+              ({ result: resultJson, panel } = await def.executeWithPanel(block.input, ctx));
+              resultCount = def.resultCount ? def.resultCount(resultJson) : 0;
+            } else if (def) {
               resultJson = await def.execute(block.input, ctx);
               resultCount = def.resultCount ? def.resultCount(resultJson) : 0;
             } else {
@@ -189,6 +195,8 @@ export async function handleAIChat(
                 type: "AI_TOOL_RESULT",
                 name: block.name,
                 courseCount: resultCount,
+                // Panel-only payload (ADR 0037). The model's copy is resultJson.
+                ...(panel !== undefined ? { courses: panel } : {}),
               });
             }
             toolResults.push({
@@ -336,3 +344,16 @@ export async function handleAIChat(
     if (controller && currentChatController === controller) currentChatController = null;
   }
 }
+
+// The kept sections for the loaded catalog term, as prompt text (ADR 0040).
+// Empty string when no catalog is loaded: there is no term to plan against.
+async function loadPlanText(): Promise<string> {
+  const r = await chrome.storage.local.get(["catalogTerm", "catalogTermLabel"]);
+  const term = r.catalogTerm as string | undefined;
+  if (!term) return "";
+  const key = planKey(term);
+  const p = await chrome.storage.local.get(key);
+  const label = (r.catalogTermLabel as string | undefined) ?? termLabel(term);
+  return planPromptText((p[key] as PlannedSection[] | undefined) ?? [], label);
+}
+

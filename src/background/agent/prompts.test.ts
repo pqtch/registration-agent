@@ -161,3 +161,19 @@ describe("buildProfileExtractionPrompt", () => {
     expect(prompt).not.toMatch(/Advisor:/);
   });
 });
+
+describe("the plan in the advisor prompt (ADR 0040)", () => {
+  it("rides only in the uncached volatile block", () => {
+    const blocks = buildAdvisorSystemBlocks({
+      profile: "p",
+      memoryIndex: "",
+      auditText: "a",
+      planText: "Sections the student has kept for Fall 2026: CRN 41021",
+    });
+    const last = blocks[blocks.length - 1];
+    expect(last.cache_control).toBeUndefined();
+    expect(last.text).toContain("## Current Plan");
+    expect(last.text).toContain("CRN 41021");
+    for (const b of blocks.slice(0, -1)) expect(b.text).not.toContain("CRN 41021");
+  });
+});

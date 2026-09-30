@@ -4,6 +4,7 @@
 
 import {
   executeCatalogSearch,
+  executeCatalogSearchWithPanel,
   SEARCH_CATALOG_TOOL,
   type CatalogSearchInput,
 } from "../catalog-search";
@@ -14,6 +15,10 @@ export const searchCatalogTool: ToolDef = {
   async execute(input) {
     const result = await executeCatalogSearch(input as CatalogSearchInput);
     return JSON.stringify(result);
+  },
+  async executeWithPanel(input) {
+    const { results, panel } = await executeCatalogSearchWithPanel(input as CatalogSearchInput);
+    return { result: JSON.stringify(results), panel };
   },
   resultCount(raw) {
     return (JSON.parse(raw as string) as unknown[]).length;

@@ -280,7 +280,8 @@ function renderRule(rule: AuditRule, depth: number): string {
 
 // ─── Status + formatting helpers ──────────────────────────────────────────────
 
-function ruleStatus(rule: AuditRule): "x" | "~" | " " {
+// Exported for auditToSummary (audit-summary.ts): one reading of "done".
+export function ruleStatus(rule: AuditRule): "x" | "~" | " " {
   const pct = parseInt(rule.percentComplete || "0", 10);
   if (pct >= 100) return "x";
   if (rule.inProgressIncomplete === "Yes" || (rule.classesAppliedToRule?.classArray?.length ?? 0) > 0) {

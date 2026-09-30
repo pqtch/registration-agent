@@ -297,7 +297,11 @@ export default function Settings() {
     setCatalogRefreshing(true);
     setCatalogError(null);
     setCatalogProgress({ done: 0, total: 1, label: "starting" });
-    chrome.runtime.sendMessage({ type: "REFRESH_CATALOG", term: selectedTerm });
+    chrome.runtime.sendMessage({
+      type: "REFRESH_CATALOG",
+      term: selectedTerm,
+      termLabel: terms.find((t) => t.code === selectedTerm)?.description ?? null,
+    });
   }
 
   function formatCatalogDate(ts: number | null): string {

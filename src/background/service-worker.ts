@@ -45,6 +45,7 @@ import { handleAIChat, cancelCurrentChat, type ChatDeps } from "./agent/chat-loo
 import type { ChatMode, StudentGoal } from "./agent/tools/types";
 import { buildProfileExtractionPrompt } from "./agent/prompts";
 import { withKeepalive } from "./keepalive";
+import { auditToSummary } from "./agent/audit-summary";
 
 // ─── Side Panel Setup ─────────────────────────────────────────────────────────
 
@@ -352,7 +353,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }
 
     case "REFRESH_CATALOG": {
-      refreshCatalog(message.term as string);
+      refreshCatalog(message.term as string, (message.termLabel as string | undefined) ?? null);
       break;
     }
 
@@ -458,6 +459,8 @@ async function refreshAudit(): Promise<void> {
     cachedAuditText = text;
     await chrome.storage.local.set({
       auditText: text,
+      // "Where you stand" (ADR 0040): PII-free, parsed from the same audit.
+      auditSummary: auditToSummary(audit),
       studentFirstName: firstName,
       studentAdvisorEmail: advisorEmail,
       studentAdvisorName: advisorName,
@@ -541,7 +544,11 @@ async function extractProfile(auditText: string): Promise<void> {
 
 // ─── Course Catalog Refresh ───────────────────────────────────────────────────
 
-async function refreshCatalog(term: string): Promise<void> {
+// termLabel is Banner's own description of the term ("Fall 2026"), passed by
+// the view that picked it, and stored so the plan names the term the way Banner
+// does (ADR 0040). Null when a caller didn't have it; the plan falls back to
+// the term-code arithmetic in shared/plan.ts.
+async function refreshCatalog(term: string, termLabel: string | null = null): Promise<void> {
   console.log(`[FordhamHelper] Refreshing catalog for term ${term}...`);
   broadcast({ type: "CATALOG_PROGRESS", done: 0, total: 1, label: "starting" });
 
@@ -582,6 +589,7 @@ async function refreshCatalog(term: string): Promise<void> {
     const updatedAt = Date.now();
     await chrome.storage.local.set({
       catalogTerm: term,
+      catalogTermLabel: termLabel,
       catalogUpdatedAt: updatedAt,
       catalogCourseCount: courses.length,
     });

@@ -14,6 +14,25 @@ function turn(
 }
 
 describe("conversationalOnly (ADR 0028)", () => {
+  it("drops toolEvents, including a search's panel sections (ADR 0037)", () => {
+    const msgs = [
+      turn("user", "EP3 on Tuesdays?"),
+      turn("assistant", "Two fit.", {
+        toolEvents: [
+          {
+            name: "search_catalog",
+            input: {},
+            courseCount: 1,
+            courses: [{ courseCode: "ENGL 3014", title: "T", credits: 3, totalSections: 1, sections: [] }],
+          },
+        ],
+      }),
+    ];
+    const out = conversationalOnly(msgs);
+    expect(out[1]).not.toHaveProperty("toolEvents");
+    expect(JSON.stringify(out)).not.toContain("ENGL 3014");
+  });
+
   it("keeps real user and assistant turns", () => {
     const msgs = [turn("user", "what do I still need?"), turn("assistant", "two courses.")];
     expect(conversationalOnly(msgs)).toEqual(msgs);

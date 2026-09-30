@@ -118,7 +118,11 @@ export default function FirstRun({
     setFetchError(false);
     setFetching(true);
     setProgress({ done: 0, total: 1 });
-    chrome.runtime.sendMessage({ type: "REFRESH_CATALOG", term: defaultTerm.code });
+    chrome.runtime.sendMessage({
+      type: "REFRESH_CATALOG",
+      term: defaultTerm.code,
+      termLabel: defaultTerm.description,
+    });
   }
   const settingsLink = (
     <button

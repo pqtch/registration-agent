@@ -116,6 +116,7 @@ export interface AdvisorPromptInput {
   profile: string;
   memoryIndex: string;
   auditText: string;
+  planText?: string; // the Plan tab, ADR 0040; volatile like the profile
 }
 
 // Build the advisor (normal-mode) system blocks. Phase 2 (ADR 0020) splits the
@@ -134,6 +135,7 @@ export function buildAdvisorSystemBlocks({
   profile,
   memoryIndex,
   auditText,
+  planText,
 }: AdvisorPromptInput): Anthropic.Messages.TextBlockParam[] {
   // Block a — stable instructions (everything mode-invariant).
   const stableText =
@@ -228,7 +230,9 @@ ${profile || "Profile not yet generated — it will appear after the audit loads
 ## Memory Index
 The entries below are durable facts learned about this student in prior conversations. Each line is \`#<id> [<type>] <description>\` — the description is intentionally terse and is NOT sufficient grounding on its own. To use a memory in your response, call \`recall_memory\` with the relevant ID(s); this loads the full content. If nothing in the index looks relevant to the student's current message, don't call the tool — unrelated recalls waste turns.
 
-${memoryIndex || "(no memories yet — the background curator populates these from future conversations.)"}`;
+${memoryIndex || "(no memories yet — the background curator populates these from future conversations.)"}${
+    planText ? `\n\n## Current Plan\n${planText}` : ""
+  }`;
 
   // Two cache breakpoints (a + b); the volatile block trails them uncached.
   // Turn 2+ within the 5-minute TTL reads the instruction + audit prefix from

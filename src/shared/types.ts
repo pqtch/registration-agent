@@ -61,6 +61,31 @@ export interface ToolEvent {
   // failed search found nothing *because it failed*, and rendering "0 results"
   // tells the student a lie. See ADR 0028.
   error?: string;
+  // Panel-only (ADR 0037): the sections a catalog search actually returned,
+  // structured for the section cards. Never sent to the model: the model got
+  // the compact JSON in the tool_result, and toolEvents never enter the
+  // prompt path (conversationalOnly, ADR 0028).
+  courses?: PanelCourse[];
+}
+
+// The panel's view of a search result: the same courses and sections the model
+// received, with meetings kept structured (the model gets them as strings).
+export interface PanelSection {
+  crn: string;
+  instructor: string;
+  seats: number;
+  campus: string;
+  mode: Section["deliveryMode"];
+  meetings: MeetingTime[];
+  attributes: SectionAttribute[];
+}
+
+export interface PanelCourse {
+  courseCode: string;
+  title: string;
+  credits: number;
+  totalSections: number;
+  sections: PanelSection[];
 }
 
 export interface ConversationMessage {
@@ -90,7 +115,12 @@ export interface ConversationMessage {
 export function conversationalOnly(
   messages: ConversationMessage[]
 ): ConversationMessage[] {
-  return messages.filter((m) => !m.systemAction);
+  // toolEvents are panel annotations (citations, and since ADR 0037 the
+  // sections a search returned). The worker builds the prompt from role and
+  // content only, so they are dropped here rather than shipped for nothing.
+  return messages
+    .filter((m) => !m.systemAction)
+    .map(({ toolEvents: _panelOnly, ...turn }) => turn);
 }
 
 export interface SystemActionItem {
