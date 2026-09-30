@@ -29,7 +29,9 @@ export default function PlanView({
     advisorEmail: string | null;
     advisorName: string | null;
   }>({ firstName: null, advisorEmail: null, advisorName: null });
-  const [copied, setCopied] = useState(false);
+  // Clipboard can refuse (permissions, focus); then the CRNs are shown to
+  // select by hand instead of the button silently doing nothing.
+  const [copy, setCopy] = useState<"idle" | "done" | "failed">("idle");
 
   useEffect(() => {
     chrome.storage.local.get(
@@ -44,10 +46,10 @@ export default function PlanView({
   }, []);
 
   useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => setCopied(false), 2000);
+    if (copy !== "done") return;
+    const t = setTimeout(() => setCopy("idle"), 2000);
     return () => clearTimeout(t);
-  }, [copied]);
+  }, [copy]);
 
   const byCrn = useMemo(() => new Map(sections.map((s) => [s.crn, s])), [sections]);
   const clashWith = (crn: string) =>
@@ -159,11 +161,15 @@ export default function PlanView({
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               onClick={() => {
-                navigator.clipboard.writeText(crns(sections).join(", ")).then(() => setCopied(true));
+                navigator.clipboard
+                  .writeText(crns(sections).join(", "))
+                  .then(() => setCopy("done"), () => setCopy("failed"));
               }}
               className={PRIMARY_BTN}
             >
-              {copied ? `Copied ${sections.length} CRNs` : "Copy CRNs"}
+              {copy === "done"
+                ? `Copied ${sections.length} ${sections.length === 1 ? "CRN" : "CRNs"}`
+                : "Copy CRNs"}
             </button>
             {email && who.advisorEmail && (
               <a
@@ -174,6 +180,12 @@ export default function PlanView({
               </a>
             )}
           </div>
+          {copy === "failed" && (
+            <p role="alert" className="mt-2 text-xs text-stone-700 dark:text-stone-300">
+              Couldn't copy. Select them here instead:{" "}
+              <span className="select-all font-medium tabular-nums">{crns(sections).join(", ")}</span>
+            </p>
+          )}
           <p className="mt-2 text-xs text-stone-600 dark:text-stone-400">
             Seats are as of the last catalog load. Registration is still yours to do in Banner.
           </p>
