@@ -47,7 +47,7 @@ export default function OnboardingSavesBubble({
         </p>
       </div>
       {items.length === 0 ? (
-        <p className="text-xs text-stone-600 dark:text-stone-400 italic">
+        <p className="text-xs text-ink-2 italic">
           Nothing to save — we'll still get you set up.
         </p>
       ) : (
@@ -61,7 +61,7 @@ export default function OnboardingSavesBubble({
                   className={
                     item.status === "saved"
                       ? "text-green-700 dark:text-green-400 mt-[1px]"
-                      : "text-stone-400 dark:text-stone-600 mt-[1px]"
+                      : "text-ink-4 mt-[1px]"
                   }
                 >
                   {item.status === "saved" ? "✓" : "·"}
@@ -73,12 +73,12 @@ export default function OnboardingSavesBubble({
                     >
                       {style.label}
                     </span>
-                    <span className="text-stone-800 dark:text-stone-200 font-medium break-words">
+                    <span className="text-ink font-medium break-words">
                       {item.description}
                     </span>
                   </div>
                   {item.sourceQuote && (
-                    <div className="text-xs text-stone-600 dark:text-stone-400 mt-1 pl-2 border-l-2 border-stone-300 dark:border-stone-600 break-words">
+                    <div className="text-xs text-ink-2 mt-1 pl-2 border-l-2 border-line-2 break-words">
                       you said: “{item.sourceQuote}”
                     </div>
                   )}

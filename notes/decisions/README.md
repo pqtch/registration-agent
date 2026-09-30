@@ -71,3 +71,4 @@ For a narrative pass through the whole decision arc, read them in numerical orde
 | [0038](./0038-the-log-floor-fits-itself.md) | The log's floor fits itself; "at the bottom" is measured, not remembered · Repairs 0032's pin-to-top | Accepted | 2026-09-30 |
 | [0039](./0039-motion-that-holds-up-on-a-slow-laptop.md) | Motion that holds up on a slow laptop: ping-pong sprites, dissolving poses, memoized prose | Accepted | 2026-09-30 |
 | [0040](./0040-the-plan-has-a-home.md) | The plan has a home: Plan tab, week grid, section cards, where you stand · Builds on 0037 | Accepted | 2026-09-30 |
+| [0041](./0041-one-surface-system-shadow-in-light-ring-in-dark.md) | One surface system: tokens for ink, surfaces and depth; shadow in light, ring in dark · Amends 0025, 0031 | Accepted | 2026-09-30 |

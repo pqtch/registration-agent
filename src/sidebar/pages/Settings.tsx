@@ -340,7 +340,7 @@ export default function Settings() {
       >
         {maskedKey && (
           <div className="flex items-center justify-between gap-3 px-4 py-2.5">
-            <span className="text-xs text-stone-800 dark:text-stone-100 font-mono truncate">
+            <span className="text-xs text-ink font-mono truncate">
               {saved ? "Saved ✓" : maskedKey}
             </span>
             <span className="flex items-center gap-3 shrink-0">
@@ -373,7 +373,7 @@ export default function Settings() {
               onKeyDown={(e) => e.key === "Enter" && saveKey()}
               placeholder={maskedKey ? "Replace key…" : "sk-ant-…"}
               aria-label="Anthropic API key"
-              className="focus-ring flex-1 min-w-0 py-1 rounded bg-transparent text-sm font-mono placeholder:text-stone-400 dark:placeholder:text-stone-500"
+              className="focus-ring flex-1 min-w-0 py-1 rounded bg-transparent text-sm font-mono placeholder:text-ink-4"
             />
             <button
               onClick={saveKey}
@@ -420,12 +420,12 @@ export default function Settings() {
               onChange={(e) => setEditValue(e.target.value)}
               rows={10}
               aria-label="Student profile"
-              className="focus-ring w-full text-xs text-stone-800 dark:text-stone-100 bg-stone-50 dark:bg-stone-800 rounded-lg p-3 font-mono leading-relaxed resize-none"
+              className="focus-ring w-full text-xs text-ink bg-sunk rounded-lg p-3 font-mono leading-relaxed resize-none"
             />
             <div className="flex gap-4 justify-end">
               <button
                 onClick={cancelEdit}
-                className="focus-ring rounded px-1 text-sm text-stone-600 dark:text-stone-400 active:scale-95 transition-transform"
+                className="focus-ring rounded px-1 text-sm text-ink-2 active:scale-95 transition-transform"
               >
                 Cancel
               </button>
@@ -443,11 +443,11 @@ export default function Settings() {
              profile with their own name in it, not [NAME] robot-speak. Edit
              mode above still edits the RAW placeholder text — the tokens are
              what's stored and sent; the substitution is a view. */
-          <pre className="px-4 py-3 text-xs text-stone-700 dark:text-stone-300 whitespace-pre-wrap font-mono leading-relaxed">
+          <pre className="px-4 py-3 text-xs text-ink-2 whitespace-pre-wrap font-mono leading-relaxed">
             {personalize(profile, firstName, advisorEmail, advisorName)}
           </pre>
         ) : (
-          <div className="px-4 py-3 text-xs text-stone-500 dark:text-stone-400">
+          <div className="px-4 py-3 text-xs text-ink-3">
             No profile yet. Visit your DegreeWorks page to generate one automatically.
           </div>
         )}
@@ -460,7 +460,7 @@ export default function Settings() {
           memories.length > 0 &&
           (pendingClearAll ? (
             <span className="flex items-center gap-2">
-              <span className="text-xs text-stone-500 dark:text-stone-400">Delete all?</span>
+              <span className="text-xs text-ink-3">Delete all?</span>
               <button
                 onClick={clearAllMemories}
                 className="focus-ring rounded-full px-2 py-0.5 text-xs font-medium bg-red-600 text-white hover:bg-red-700 active:scale-95 transition-transform"
@@ -469,7 +469,7 @@ export default function Settings() {
               </button>
               <button
                 onClick={() => setPendingClearAll(false)}
-                className="focus-ring rounded px-1 text-xs text-stone-600 dark:text-stone-400"
+                className="focus-ring rounded px-1 text-xs text-ink-2"
               >
                 Cancel
               </button>
@@ -495,7 +495,7 @@ export default function Settings() {
         {/* Auto-save toggle — row title + switch; the explanation lives in
             the section footer, where iOS puts it. */}
         <label className="flex items-center justify-between gap-3 px-4 py-2.5 cursor-pointer">
-          <span className="text-sm text-stone-900 dark:text-stone-100">
+          <span className="text-sm text-ink">
             Auto-save memories from chat
           </span>
           <button
@@ -514,7 +514,7 @@ export default function Settings() {
             <span
               className={`absolute top-0.5 inline-block h-5 w-5 rounded-full shadow transition-transform duration-200 ease-spring ${
                 autoSaveEnabled
-                  ? "translate-x-[18px] bg-white dark:bg-stone-900"
+                  ? "translate-x-[18px] bg-raised"
                   : "translate-x-0.5 bg-white"
               }`}
             />
@@ -522,7 +522,7 @@ export default function Settings() {
         </label>
 
         {memories.length === 0 ? (
-          <div className="px-4 py-3 text-xs text-stone-500 dark:text-stone-400">
+          <div className="px-4 py-3 text-xs text-ink-3">
             No memories yet. They'll appear here as you chat — or start by
             completing onboarding in the Advisor tab.
           </div>
@@ -538,7 +538,7 @@ export default function Settings() {
                       the student is reading this row — it wraps instead of
                       truncating behind the type chip. */}
                   {editingId !== m.id && (
-                    <p className="text-sm font-medium text-stone-900 dark:text-stone-100 leading-snug mb-0.5">
+                    <p className="text-sm font-medium text-ink leading-snug mb-0.5">
                       {m.description}
                       {/* Same colored chip the onboarding save list uses
                           (memoryTypeStyles, ADR 0032) — one type, one color,
@@ -563,7 +563,7 @@ export default function Settings() {
                         onChange={(e) => setEditDraftDescription(e.target.value)}
                         placeholder="Description (≤10 words)"
                         aria-label="Memory description"
-                        className="focus-ring w-full text-xs px-2 py-1.5 bg-stone-50 dark:bg-stone-800 rounded-lg"
+                        className="focus-ring w-full text-xs px-2 py-1.5 bg-sunk rounded-lg"
                       />
                       <textarea
                         value={editDraftContent}
@@ -571,12 +571,12 @@ export default function Settings() {
                         placeholder="Content (1–3 sentences)"
                         rows={3}
                         aria-label="Memory content"
-                        className="focus-ring w-full text-xs px-2 py-1.5 bg-stone-50 dark:bg-stone-800 rounded-lg resize-none leading-snug"
+                        className="focus-ring w-full text-xs px-2 py-1.5 bg-sunk rounded-lg resize-none leading-snug"
                       />
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={cancelMemoryEdit}
-                          className="focus-ring rounded px-1 text-xs text-stone-600 dark:text-stone-400 hover:underline"
+                          className="focus-ring rounded px-1 text-xs text-ink-2 hover:underline"
                         >
                           Cancel
                         </button>
@@ -591,13 +591,13 @@ export default function Settings() {
                     </div>
                   ) : (
                     <>
-                      <p className="text-xs text-stone-600 dark:text-stone-400 leading-snug">{m.content}</p>
+                      <p className="text-xs text-ink-2 leading-snug">{m.content}</p>
                       {/* ADR 0015: this quote exists so the student can VERIFY
                           the memory against what they remember saying. It is
                           evidence, so it is set like evidence — not shrunk to
                           10px grey italic like a disclaimer nobody reads. */}
                       {m.sourceQuote && (
-                        <p className="text-xs text-stone-600 dark:text-stone-400 leading-snug mt-1.5 pl-2 border-l-2 border-stone-300 dark:border-stone-600">
+                        <p className="text-xs text-ink-2 leading-snug mt-1.5 pl-2 border-l-2 border-line-2">
                           you said: “{m.sourceQuote}”
                         </p>
                       )}
@@ -608,7 +608,7 @@ export default function Settings() {
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => startMemoryEdit(m)}
-                      className="focus-ring rounded inline-flex items-center justify-center min-w-6 min-h-6 text-xs text-stone-600 dark:text-stone-400 hover:text-fordham-maroon dark:hover:text-fordham-maroon-ink"
+                      className="focus-ring rounded inline-flex items-center justify-center min-w-6 min-h-6 text-xs text-ink-2 hover:text-fordham-maroon dark:hover:text-fordham-maroon-ink"
                       aria-label={`Edit memory: ${m.description}`}
                       title="Edit"
                     >
@@ -616,7 +616,7 @@ export default function Settings() {
                     </button>
                     <button
                       onClick={() => deleteMemoryEntry(m.id)}
-                      className="focus-ring rounded inline-flex items-center justify-center min-w-6 min-h-6 text-xs text-stone-600 dark:text-stone-400 hover:text-red-700 dark:hover:text-red-400"
+                      className="focus-ring rounded inline-flex items-center justify-center min-w-6 min-h-6 text-xs text-ink-2 hover:text-red-700 dark:hover:text-red-400"
                       aria-label={`Delete memory: ${m.description}`}
                       title="Delete"
                     >
@@ -642,7 +642,7 @@ export default function Settings() {
           </div>
         ) : pendingRerun ? (
           <div className="px-4 py-3 space-y-2">
-            <p className="text-xs text-stone-800 dark:text-stone-100 leading-snug">
+            <p className="text-xs text-ink leading-snug">
               This deletes everything the advisor has learned about you and
               restarts the intake. Your audit, API key, and catalog stay intact.
             </p>
@@ -655,7 +655,7 @@ export default function Settings() {
               </button>
               <button
                 onClick={() => setPendingRerun(false)}
-                className="focus-ring rounded px-1 text-xs text-stone-600 dark:text-stone-400"
+                className="focus-ring rounded px-1 text-xs text-ink-2"
               >
                 Cancel
               </button>
@@ -669,7 +669,7 @@ export default function Settings() {
             <span className="block text-sm font-medium text-red-600 dark:text-red-400 group-active:scale-[0.98] origin-left transition-transform">
               Re-run Onboarding
             </span>
-            <span className="block text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+            <span className="block text-xs text-ink-3 mt-0.5">
               Wipes memories and restarts the intake. Audit, key, and catalog stay.
             </span>
           </button>
@@ -726,13 +726,13 @@ export default function Settings() {
 
         {catalogRefreshing && catalogProgress && (
           <div className="px-4 py-2.5">
-            <div className="flex justify-between text-xs text-stone-500 dark:text-stone-400 mb-1.5">
+            <div className="flex justify-between text-xs text-ink-3 mb-1.5">
               <span>Fetching {catalogProgress.label}</span>
               <span>
                 {catalogProgress.done} / {catalogProgress.total}
               </span>
             </div>
-            <div className="h-1.5 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-sunk rounded-full overflow-hidden">
               <div
                 className="h-full bg-fordham-maroon dark:bg-fordham-maroon-ink rounded-full transition-[width] duration-200 ease-spring"
                 style={{
@@ -801,15 +801,15 @@ export default function Settings() {
         }
       >
         {!auditText ? (
-          <div className="px-4 py-3 text-xs text-stone-500 dark:text-stone-400">
+          <div className="px-4 py-3 text-xs text-ink-3">
             No audit captured yet. Visit your DegreeWorks page.
           </div>
         ) : showAudit ? (
-          <pre className="px-4 py-3 text-xs text-stone-700 dark:text-stone-300 whitespace-pre-wrap font-mono leading-relaxed max-h-96 overflow-y-auto">
+          <pre className="px-4 py-3 text-xs text-ink-2 whitespace-pre-wrap font-mono leading-relaxed max-h-96 overflow-y-auto">
             {auditText}
           </pre>
         ) : (
-          <div className="px-4 py-3 text-xs text-stone-500 dark:text-stone-400">
+          <div className="px-4 py-3 text-xs text-ink-3">
             {auditText.substring(0, 120).trim()}…
           </div>
         )}
@@ -825,7 +825,7 @@ export default function Settings() {
           <div
             role="radiogroup"
             aria-label="Theme"
-            className="flex rounded-lg bg-stone-100 dark:bg-stone-800 p-0.5"
+            className="flex rounded-lg bg-sunk p-0.5"
           >
             {(["light", "system", "dark"] as const).map((option) => (
               <button
@@ -835,8 +835,8 @@ export default function Settings() {
                 onClick={() => selectTheme(option)}
                 className={`focus-ring flex-1 rounded-md text-xs font-medium py-1.5 capitalize transition-[background-color,color,box-shadow,transform] duration-200 ease-spring active:scale-95 ${
                   theme === option
-                    ? "bg-white dark:bg-stone-600 text-stone-900 dark:text-stone-50 shadow-sm"
-                    : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+                    ? "bg-raised text-ink shadow-sm"
+                    : "text-ink-2 hover:text-ink"
                 }`}
               >
                 {option}
@@ -848,7 +848,7 @@ export default function Settings() {
 
       {/* About — footer-only, like the fine print at the bottom of an iOS
           settings page. */}
-      <p className="px-4 pb-2 text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+      <p className="px-4 pb-2 text-xs text-ink-2 leading-relaxed">
         RamPlan reads your DegreeWorks audit and uses Claude AI (Sonnet for
         chat, Haiku for profile extraction) to help you plan your courses.
         All data is stored locally in your browser.
@@ -891,11 +891,11 @@ function Section({
           soft shadow restores the "raised card" read ADR 0031 called for.
           Dark works by lightness alone (stone-900 card > stone-950 page), so
           it keeps just the hairline and drops the shadow (invisible on dark). */}
-      <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm dark:shadow-none divide-y divide-stone-100 dark:divide-stone-800 overflow-hidden">
+      <div className="card divide-y divide-line overflow-hidden">
         {children}
       </div>
       {footer && (
-        <p className="px-4 mt-1.5 text-xs text-stone-600 dark:text-stone-400 leading-snug">
+        <p className="px-4 mt-1.5 text-xs text-ink-2 leading-snug">
           {footer}
         </p>
       )}

@@ -70,10 +70,10 @@ export default function PlanView({
   if (!term) {
     return (
       <Page>
-        <h2 className="font-serif text-[26px] font-medium leading-tight text-stone-900 dark:text-stone-100">
+        <h2 className="font-serif text-[26px] font-medium leading-tight text-ink">
           Your plan
         </h2>
-        <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
+        <p className="mt-2 text-sm text-ink-2">
           A plan is built from one term's course catalog. Load a term in Settings to start.
         </p>
         <button onClick={onOpenSettings} className={SECONDARY_BTN + " mt-4"}>
@@ -101,11 +101,11 @@ export default function PlanView({
   return (
     <Page>
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-serif text-[26px] font-medium leading-tight text-stone-900 dark:text-stone-100">
+        <h2 className="font-serif text-[26px] font-medium leading-tight text-ink">
           {termLabel}
         </h2>
         {sections.length > 0 && (
-          <p className="text-sm tabular-nums text-stone-600 dark:text-stone-400">
+          <p className="text-sm tabular-nums text-ink-2">
             {credits} {credits === 1 ? "credit" : "credits"}
           </p>
         )}
@@ -113,17 +113,17 @@ export default function PlanView({
 
       {sections.length === 0 ? (
         <div className="mt-2">
-          <p className="text-sm text-stone-600 dark:text-stone-400">
-            Nothing kept yet. When the advisor finds sections, tap <span className="font-medium text-stone-800 dark:text-stone-200">Add</span> on
+          <p className="text-sm text-ink-2">
+            Nothing kept yet. When the advisor finds sections, tap <span className="font-medium text-ink">Add</span> on
             the ones you want and they land here, on your week.
           </p>
           {openAsks.length > 0 && (
-            <div className="mt-4 divide-y divide-stone-200 dark:divide-stone-800 border-y border-stone-200 dark:border-stone-800">
+            <div className="mt-4 card divide-y divide-line overflow-hidden">
               {openAsks.map((req) => (
                 <button
                   key={req}
                   onClick={() => onAsk(`Find ${termLabel} sections for ${req} that fit my schedule.`)}
-                  className="focus-ring block w-full text-left px-1 py-2.5 text-sm text-stone-700 dark:text-stone-300 hover:text-fordham-maroon dark:hover:text-fordham-maroon-ink transition-colors"
+                  className="focus-ring block w-full text-left px-3.5 py-2.5 text-sm text-ink-2 hover:text-fordham-maroon dark:hover:text-fordham-maroon-ink transition-colors"
                 >
                   Find sections for {req}
                 </button>
@@ -135,7 +135,7 @@ export default function PlanView({
         <>
           <p
             className={`mt-1 text-xs ${
-              clashLine ? "text-red-700 dark:text-red-400 font-medium" : "text-stone-600 dark:text-stone-400"
+              clashLine ? "text-red-700 dark:text-red-400 font-medium" : "text-ink-2"
             }`}
             role={clashLine ? "alert" : undefined}
           >
@@ -152,7 +152,7 @@ export default function PlanView({
             />
           </div>
 
-          <ul className="mt-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm dark:shadow-none divide-y divide-stone-100 dark:divide-stone-800 overflow-hidden">
+          <ul className="mt-5 card divide-y divide-line overflow-hidden">
             {sections.map((s) => (
               <SectionRow key={s.crn} s={s} clashes={clashWith(s.crn)} onRemove={() => remove(s.crn)} />
             ))}
@@ -181,12 +181,12 @@ export default function PlanView({
             )}
           </div>
           {copy === "failed" && (
-            <p role="alert" className="mt-2 text-xs text-stone-700 dark:text-stone-300">
+            <p role="alert" className="mt-2 text-xs text-ink-2">
               Couldn't copy. Select them here instead:{" "}
               <span className="select-all font-medium tabular-nums">{crns(sections).join(", ")}</span>
             </p>
           )}
-          <p className="mt-2 text-xs text-stone-600 dark:text-stone-400">
+          <p className="mt-2 text-xs text-ink-2">
             Seats are as of the last catalog load. Registration is still yours to do in Banner.
           </p>
         </>
@@ -207,11 +207,11 @@ function SectionRow({
   return (
     <li className="flex items-start gap-2 px-3.5 py-3">
       <div className="min-w-0 flex-1">
-        <p className="text-sm leading-snug text-stone-900 dark:text-stone-100">
+        <p className="text-sm leading-snug text-ink">
           <span className="font-semibold tabular-nums">{s.courseCode}</span>{" "}
-          <span className="text-stone-700 dark:text-stone-300">{s.title}</span>
+          <span className="text-ink-2">{s.title}</span>
         </p>
-        <p className="mt-0.5 text-xs tabular-nums text-stone-600 dark:text-stone-400">
+        <p className="mt-0.5 text-xs tabular-nums text-ink-2">
           {meetingsLabel(s.meetings)} · CRN {s.crn} ·{" "}
           {s.seats > 0 ? (
             `${s.seats} ${s.seats === 1 ? "seat" : "seats"}`
@@ -220,13 +220,13 @@ function SectionRow({
           )}
         </p>
         {(s.instructor || s.attributes.length > 0) && (
-          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-stone-600 dark:text-stone-400">
+          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-ink-2">
             {s.instructor && <span>{s.instructor}</span>}
             {s.attributes.slice(0, 4).map((a) => (
               <span
                 key={a.code}
                 title={a.description}
-                className="rounded border border-stone-200 dark:border-stone-700 px-1 py-px text-[10px] font-medium text-stone-700 dark:text-stone-300"
+                className="rounded border border-line px-1 py-px text-[10px] font-medium text-ink-2"
               >
                 {a.code}
               </span>
@@ -259,4 +259,4 @@ function Page({ children }: { children: React.ReactNode }) {
 const PRIMARY_BTN =
   "focus-ring inline-flex items-center rounded-lg px-3.5 py-2 text-sm font-medium bg-fordham-maroon text-white hover:bg-fordham-maroon/90 active:scale-[0.98] transition-[background-color,transform] duration-200 ease-spring";
 const SECONDARY_BTN =
-  "focus-ring inline-flex items-center rounded-lg px-3.5 py-2 text-sm font-medium border border-stone-300 dark:border-stone-700 text-stone-800 dark:text-stone-200 hover:border-fordham-maroon dark:hover:border-fordham-maroon-ink active:scale-[0.98] transition-[border-color,transform] duration-200 ease-spring";
+  "focus-ring inline-flex items-center rounded-lg px-3.5 py-2 text-sm font-medium border border-line-2 text-ink hover:border-fordham-maroon dark:hover:border-fordham-maroon-ink active:scale-[0.98] transition-[border-color,transform] duration-200 ease-spring";

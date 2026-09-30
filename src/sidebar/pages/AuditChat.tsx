@@ -1092,7 +1092,7 @@ export default function AuditChat({
               isAtBottom ? "opacity-100" : "opacity-0"
             }`}
           >
-            <div className="rounded-2xl rounded-br-md border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 shadow-sm px-3 py-1.5">
+            <div className="rounded-2xl rounded-br-md border border-line bg-sunk shadow-sm px-3 py-1.5">
               {/* shimmer-text owns the ink (bg-clip-text) — a lighter band
                   sweeps the phrase so the pane visibly lives through a long
                   tool call; both gradient ends are legible inks, so a
@@ -1101,8 +1101,8 @@ export default function AuditChat({
                 {statusPhrase}…
               </p>
             </div>
-            <span className="thought-dot thought-dot--1 border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800" />
-            <span className="thought-dot thought-dot--2 border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800" />
+            <span className="thought-dot thought-dot--1 border border-line bg-sunk" />
+            <span className="thought-dot thought-dot--2 border border-line bg-sunk" />
           </div>
         )}
         {statusPhrase && <span className="sr-only">Advisor is thinking</span>}
@@ -1136,7 +1136,7 @@ export default function AuditChat({
         {messages.length === 0 && welcomeDecided && !showWelcomeCard && (
           <div className="pt-4 animate-msg-in">
             {justOnboarded && (
-              <p className="mb-3 text-xs text-stone-500 dark:text-stone-400">
+              <p className="mb-3 text-xs text-ink-3">
                 Onboarding complete — memories saved · view them in Settings
               </p>
             )}
@@ -1145,26 +1145,21 @@ export default function AuditChat({
                 can I ask" job on their own. Display serif (Newsreader) at
                 medium — high-contrast faces read best larger and lighter than
                 a grotesque headline, so semibold/tracking-tight are dropped. */}
-            <p className="font-serif text-[26px] font-medium leading-tight text-stone-900 dark:text-stone-100 mb-4">
+            <p className="font-serif text-[26px] font-medium leading-tight text-ink mb-4">
               {greeting}
             </p>
-            {/* Hairline stone-200, not stone-100 (round-3 fix): these dividers
-                sit directly on the warm paper, not inside a white card, so
-                stone-100 dissolved into the background exactly as the settings
-                cards did. stone-200 is the same hairline value that restored
-                the card edge. Dark reads on lightness alone (stone-800). */}
             {/* Where you stand (ADR 0040): once the audit has been summarised,
                 its open requirements ARE the suggestions. The generic four
                 remain only until a first refresh writes the summary. */}
             {auditSummary ? (
               <WhereYouStand summary={auditSummary} onAsk={(t) => sendMessage(t)} />
             ) : (
-            <div className="divide-y divide-stone-200 dark:divide-stone-800 border-y border-stone-200 dark:border-stone-800">
+            <div className="card divide-y divide-line overflow-hidden">
               {SUGGESTIONS.map((s) => (
                 <button
                   key={s}
                   onClick={() => sendMessage(s)}
-                  className="focus-ring block w-full text-left px-1 py-2.5 text-sm text-stone-700 dark:text-stone-300 hover:text-fordham-maroon dark:hover:text-fordham-maroon-ink active:bg-stone-50 dark:active:bg-stone-800/60 transition-colors"
+                  className="focus-ring block w-full text-left px-3.5 py-2.5 text-sm text-ink-2 hover:text-fordham-maroon dark:hover:text-fordham-maroon-ink active:bg-sunk transition-colors"
                 >
                   {s}
                 </button>
@@ -1260,7 +1255,7 @@ export default function AuditChat({
         <div className="px-3 pb-1 shrink-0">
           <p
             key={toast.id}
-            className="border-l-2 border-fordham-maroon dark:border-fordham-maroon-ink pl-2 py-0.5 text-[11px] leading-relaxed text-stone-600 dark:text-stone-400 truncate animate-toast-pop"
+            className="border-l-2 border-fordham-maroon dark:border-fordham-maroon-ink pl-2 py-0.5 text-[11px] leading-relaxed text-ink-2 truncate animate-toast-pop"
           >
             <span className="uppercase tracking-wider font-semibold">Saved</span>
             {" · "}
@@ -1273,7 +1268,7 @@ export default function AuditChat({
           NOT disabled while loading (ADR 0032): disabling dropped focus every
           turn, and typing-while-streaming is the messenger contract — Enter
           during a stream is simply ignored (sendMessage early-returns). */}
-      <div className="px-3 pb-3 pt-2 border-t border-stone-200/70 dark:border-stone-800 shrink-0 bg-stone-50 dark:bg-stone-900">
+      <div className="px-3 pb-3 pt-2 border-t border-line shrink-0 bg-paper">
         {/* The iMessage composer contract (ADR 0031): a pill field with a
             circular action button anchored at the baseline. items-end keeps
             the circle at the bottom while the textarea grows. */}
@@ -1306,7 +1301,7 @@ export default function AuditChat({
             // (audit 2026-09-30, #7).
             disabled={showContinueButton || noKeyYet}
             aria-label="Message the advisor"
-            className="focus-ring flex-1 px-3.5 py-[7px] rounded-[18px] border border-stone-300 dark:border-stone-700 bg-transparent text-sm leading-relaxed [field-sizing:content] max-h-36 resize-none disabled:opacity-50 placeholder:text-stone-400 dark:placeholder:text-stone-500"
+            className="focus-ring flex-1 px-3.5 py-[7px] rounded-[18px] border border-line-2 bg-transparent text-sm leading-relaxed [field-sizing:content] max-h-36 resize-none disabled:opacity-50 placeholder:text-ink-4"
           />
           {loading ? (
             <button

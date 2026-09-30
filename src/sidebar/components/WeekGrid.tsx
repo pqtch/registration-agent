@@ -46,7 +46,7 @@ export default function WeekGrid({
         {l.days.map((d, i) => (
           <span
             key={d}
-            className="absolute top-0 text-center text-[11px] font-medium text-stone-600 dark:text-stone-400"
+            className="absolute top-0 text-center text-[11px] font-medium text-ink-2"
             style={{ left: colLeft(i), width: colWidth() }}
           >
             {DAY_LABEL[d]}
@@ -57,11 +57,11 @@ export default function WeekGrid({
         {Array.from({ length: hours + 1 }, (_, h) => (
           <div key={h} className="absolute inset-x-0" style={{ top: h * HOUR_PX }}>
             <div
-              className="absolute right-0 border-t border-stone-200 dark:border-stone-800"
+              className="absolute right-0 border-t border-line"
               style={{ left: GUTTER_PX }}
             />
             {h < hours && (
-              <span className="absolute left-0 -top-[7px] w-[22px] text-right text-[10px] tabular-nums text-stone-500 dark:text-stone-400">
+              <span className="absolute left-0 -top-[7px] w-[22px] text-right text-[10px] tabular-nums text-ink-3">
                 {hourLabel(l.startMin + h * 60)}
               </span>
             )}
@@ -70,7 +70,7 @@ export default function WeekGrid({
         {l.days.slice(1).map((d, i) => (
           <div
             key={d}
-            className="absolute top-0 bottom-0 border-l border-stone-200/70 dark:border-stone-800/70"
+            className="absolute top-0 bottom-0 border-l border-line"
             style={{ left: colLeft(i + 1) }}
           />
         ))}
@@ -107,7 +107,7 @@ export default function WeekGrid({
             {/* On a clash the hatch shows through the translucent fill, so the
                 label gets a paper-coloured backing to stay legible over it. */}
             {b.clash ? (
-              <span className="rounded-[2px] bg-stone-50/90 dark:bg-stone-900/90 box-decoration-clone px-0.5 -mx-0.5">
+              <span className="rounded-[2px] bg-paper/90 box-decoration-clone px-0.5 -mx-0.5">
                 {b.label}
               </span>
             ) : (

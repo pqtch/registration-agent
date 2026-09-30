@@ -32,13 +32,13 @@ export default function WhereYouStand({
     <section aria-label="Where you stand" className="mt-1">
       {(pct !== null || credits) && (
         <div>
-          <p className="flex items-baseline justify-between text-xs tabular-nums text-stone-600 dark:text-stone-400">
+          <p className="flex items-baseline justify-between text-xs tabular-nums text-ink-2">
             <span>{credits ?? "Degree progress"}</span>
-            {pct !== null && <span className="font-medium text-stone-800 dark:text-stone-200">{pct}% complete</span>}
+            {pct !== null && <span className="font-medium text-ink">{pct}% complete</span>}
           </p>
           {pct !== null && (
             <div
-              className="mt-1.5 h-1.5 rounded-full bg-stone-200 dark:bg-stone-800 overflow-hidden"
+              className="mt-1.5 h-1.5 rounded-full bg-sunk overflow-hidden"
               role="progressbar"
               aria-valuenow={pct}
               aria-valuemin={0}
@@ -58,19 +58,19 @@ export default function WhereYouStand({
         <div className="mt-5 space-y-4">
           {open.map((b) => (
             <div key={b.id}>
-              <h3 className="flex items-baseline justify-between text-xs text-stone-600 dark:text-stone-400">
-                <span className="font-semibold text-stone-800 dark:text-stone-200">{b.title}</span>
+              <h3 className="flex items-baseline justify-between text-xs text-ink-2">
+                <span className="font-semibold text-ink">{b.title}</span>
                 <span className="tabular-nums">{b.percentComplete}%</span>
               </h3>
-              <ul className="mt-1 divide-y divide-stone-200 dark:divide-stone-800 border-y border-stone-200 dark:border-stone-800">
+              <ul className="mt-1 card divide-y divide-line overflow-hidden">
                 {b.open.map((o) => (
                   <li key={o.id}>
                     <button
                       onClick={() => onAsk(`What can I take for ${o.label}, and which sections fit my schedule?`)}
-                      className="focus-ring group flex w-full items-center justify-between gap-2 px-1 py-2.5 text-left text-sm text-stone-700 dark:text-stone-300 hover:text-fordham-maroon dark:hover:text-fordham-maroon-ink transition-colors"
+                      className="focus-ring group flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left text-sm text-ink-2 hover:text-fordham-maroon dark:hover:text-fordham-maroon-ink transition-colors"
                     >
                       <span>{o.label}</span>
-                      <span aria-hidden className="shrink-0 text-xs text-stone-500 dark:text-stone-400 group-hover:text-fordham-maroon dark:group-hover:text-fordham-maroon-ink">
+                      <span aria-hidden className="shrink-0 text-xs text-ink-3 group-hover:text-fordham-maroon dark:group-hover:text-fordham-maroon-ink">
                         Ask
                       </span>
                     </button>
@@ -81,7 +81,7 @@ export default function WhereYouStand({
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-sm text-stone-600 dark:text-stone-400">
+        <p className="mt-4 text-sm text-ink-2">
           Your audit shows no open requirements.
         </p>
       )}

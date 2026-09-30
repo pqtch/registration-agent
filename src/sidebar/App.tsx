@@ -70,13 +70,13 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-stone-50 dark:bg-stone-900">
+    <div className="flex flex-col h-screen bg-paper">
       {/* Native-app chrome (ADR 0031): a light translucent bar with a hairline,
           not a solid maroon slab — the brand lives in the maroon serif
           wordmark and every accent below, the way Messages carries blue
           without painting its navigation bar blue. backdrop-blur matters the
           moment content scrolls beneath the bar. */}
-      <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 pl-3 min-[360px]:pl-4 pr-2 py-2 bg-stone-50 dark:bg-stone-900 border-b border-stone-200/70 dark:border-stone-800 shrink-0 z-10">
+      <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 pl-3 min-[360px]:pl-4 pr-2 py-2 bg-paper border-b border-line shrink-0 z-10">
         {/* Brand lockup: the single "Ram Plan" logo image — the pixel-art
             Fordhawke head + a fountain-pen cursive wordmark, baked as one asset.
             It supersedes the 0036 crest-plus-Newsreader pairing: head and
@@ -102,7 +102,7 @@ export default function App() {
         {/* iOS segmented control: recessed track, raised active segment.
             stone-200/70 — stone-100 vanished against the stone-50 bar. */}
         <nav
-          className="flex rounded-lg bg-stone-200/70 dark:bg-stone-800 p-0.5"
+          className="flex rounded-lg bg-sunk p-0.5"
           aria-label="Pages"
         >
           <NavButton active={page === "chat"} onClick={() => setPage("chat")}>
@@ -115,7 +115,7 @@ export default function App() {
                 <span
                   aria-hidden
                   className={`ml-1 tabular-nums ${
-                    plan.conflicts.length ? "text-red-700 dark:text-red-400" : "text-stone-500 dark:text-stone-400"
+                    plan.conflicts.length ? "text-red-700 dark:text-red-400" : "text-ink-3"
                   }`}
                 >
                   {plan.sections.length}
@@ -180,8 +180,8 @@ function NavButton({
       aria-current={active ? "page" : undefined}
       className={`focus-ring rounded-md px-2 min-[360px]:px-2.5 py-1 text-xs font-medium transition-[background-color,color,box-shadow,transform] duration-200 ease-spring active:scale-95 ${
         active
-          ? "bg-white dark:bg-stone-600 text-stone-900 dark:text-stone-50 shadow-sm"
-          : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+          ? "bg-raised text-ink shadow-sm"
+          : "text-ink-2 hover:text-ink"
       }`}
     >
       {children}

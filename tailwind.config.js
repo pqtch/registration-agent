@@ -20,7 +20,22 @@ export default {
         // the it-must-always-paint system-serif fallback.
         serif: ['"Newsreader"', "Georgia", '"Times New Roman"', "serif"],
       },
+      // ADR 0041: the surface system lives in CSS variables (styles.css) so a
+      // theme is one variable swap, not a `dark:` twin on every element.
       colors: {
+        paper: "rgb(var(--paper) / <alpha-value>)",
+        raised: "rgb(var(--raised) / <alpha-value>)",
+        sunk: "rgb(var(--sunk) / <alpha-value>)",
+        line: {
+          DEFAULT: "rgb(var(--line) / <alpha-value>)",
+          2: "rgb(var(--line-2) / <alpha-value>)",
+        },
+        ink: {
+          DEFAULT: "rgb(var(--ink) / <alpha-value>)",
+          2: "rgb(var(--ink-2) / <alpha-value>)",
+          3: "rgb(var(--ink-3) / <alpha-value>)",
+          4: "rgb(var(--ink-4) / <alpha-value>)",
+        },
         fordham: {
           // Maroon FILLS everywhere; maroon WRITES only on light surfaces.
           // #6B1A1A is 11.75:1 on white but 1.51:1 on gray-900 — as an ink it
@@ -38,6 +53,10 @@ export default {
       // one indeterminate sweep are the whole animation budget — all silenced
       // by the prefers-reduced-motion block in styles.css. Curves are iOS's:
       // fast start, long soft landing — never linear, never bouncy-cartoon.
+      boxShadow: {
+        lift: "var(--lift-1)",
+        "lift-2": "var(--lift-2)",
+      },
       transitionTimingFunction: {
         // The UIKit sheet/spring curve. Use for anything that moves.
         spring: "cubic-bezier(0.32, 0.72, 0, 1)",

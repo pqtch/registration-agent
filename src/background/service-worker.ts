@@ -512,7 +512,7 @@ async function extractProfile(auditText: string): Promise<void> {
     // Keepalive: this runs on its own (post-refresh, no queued UI event), so
     // the MV3 idle kill could land mid-call and drop the profile write.
     const response = await withKeepalive(client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-haiku-4-5",
       max_tokens: 300,
       messages: [{
         role: "user",

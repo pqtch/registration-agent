@@ -82,24 +82,24 @@ function Message({
         </div>
       )}
       {message.content.trim() !== "" && (
-        <div className="max-w-[65ch] text-sm leading-relaxed text-stone-800 dark:text-stone-100">
+        <div className="max-w-[65ch] text-sm leading-relaxed text-ink">
           <Markdown
             remarkPlugins={[remarkGfm]}
             components={{
               p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
-              strong: ({ children }) => <strong className="font-semibold text-stone-900 dark:text-stone-50">{children}</strong>,
+              strong: ({ children }) => <strong className="font-semibold text-ink">{children}</strong>,
               em: ({ children }) => <em className="italic">{children}</em>,
               ul: ({ children }) => <ul className="list-disc pl-5 space-y-1 my-2">{children}</ul>,
               ol: ({ children }) => <ol className="list-decimal pl-5 space-y-1 my-2">{children}</ol>,
               li: ({ children }) => <li className="leading-snug">{children}</li>,
-              code: ({ children }) => <code className="bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100 px-1 py-0.5 rounded text-xs font-mono">{children}</code>,
-              pre: ({ children }) => <pre className="bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100 p-2 rounded-md text-xs font-mono overflow-x-auto my-2">{children}</pre>,
+              code: ({ children }) => <code className="bg-sunk text-ink px-1 py-0.5 rounded text-xs font-mono">{children}</code>,
+              pre: ({ children }) => <pre className="bg-sunk text-ink p-2 rounded-md text-xs font-mono overflow-x-auto my-2">{children}</pre>,
               // Headings demote to sized paragraphs — a full h1 inside a
               // narrow column shouts. Sizing keeps the hierarchy readable.
               h1: ({ children }) => <p className="font-semibold text-base mt-3 mb-1 first:mt-0">{children}</p>,
               h2: ({ children }) => <p className="font-semibold text-[15px] mt-3 mb-1 first:mt-0">{children}</p>,
               h3: ({ children }) => <p className="font-semibold text-[14px] mt-2 mb-1 first:mt-0">{children}</p>,
-              hr: () => <hr className="my-3 border-stone-200 dark:border-stone-700" />,
+              hr: () => <hr className="my-3 border-line" />,
               a: ({ href, children }) => (
                 <a
                   href={href}
@@ -111,7 +111,7 @@ function Message({
                 </a>
               ),
               blockquote: ({ children }) => (
-                <blockquote className="border-l-2 border-stone-300 dark:border-stone-600 pl-3 my-2 text-stone-600 dark:text-stone-400">
+                <blockquote className="border-l-2 border-line-2 pl-3 my-2 text-ink-2">
                   {children}
                 </blockquote>
               ),
@@ -122,16 +122,16 @@ function Message({
                   <table className="text-xs border-collapse">{children}</table>
                 </div>
               ),
-              thead: ({ children }) => <thead className="bg-stone-50 dark:bg-stone-800">{children}</thead>,
+              thead: ({ children }) => <thead className="bg-sunk">{children}</thead>,
               tbody: ({ children }) => <tbody>{children}</tbody>,
-              tr: ({ children }) => <tr className="border-b border-stone-200 dark:border-stone-700">{children}</tr>,
+              tr: ({ children }) => <tr className="border-b border-line">{children}</tr>,
               th: ({ children }) => (
-                <th className="px-2 py-1 text-left font-semibold text-stone-700 dark:text-stone-300 border-r border-stone-200 dark:border-stone-700 last:border-r-0">
+                <th className="px-2 py-1 text-left font-semibold text-ink-2 border-r border-line last:border-r-0">
                   {children}
                 </th>
               ),
               td: ({ children }) => (
-                <td className="px-2 py-1 align-top border-r border-stone-200 dark:border-stone-700 last:border-r-0">
+                <td className="px-2 py-1 align-top border-r border-line last:border-r-0">
                   {children}
                 </td>
               ),

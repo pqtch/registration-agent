@@ -19,7 +19,7 @@ export const MEMORY_TYPE_STYLE: Record<MemoryType, MemoryTypeStyle> = {
   constraint: { label: "CONSTRAINT", bg: "bg-amber-100 dark:bg-amber-900/40", text: "text-amber-800 dark:text-amber-200" },
   goal: { label: "GOAL", bg: "bg-blue-100 dark:bg-blue-900/40", text: "text-blue-800 dark:text-blue-200" },
   decision: { label: "DECISION", bg: "bg-green-100 dark:bg-green-900/40", text: "text-green-800 dark:text-green-200" },
-  note: { label: "NOTE", bg: "bg-stone-100 dark:bg-stone-800", text: "text-stone-700 dark:text-stone-300" },
+  note: { label: "NOTE", bg: "bg-sunk", text: "text-ink-2" },
 };
 
 export function memoryTypeStyle(type: string): MemoryTypeStyle {

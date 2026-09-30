@@ -12,7 +12,7 @@
     "build:win": "vite build && rsync -a --delete dist/ /mnt/c/Users/Public/ramplan-dist/"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
+    "@anthropic-ai/sdk": "^0.130.0",
     "idb": "^8.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -23,6 +23,7 @@
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.26",
     "@types/chrome": "^0.0.300",
+    "@types/node": "^22.20.4",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",

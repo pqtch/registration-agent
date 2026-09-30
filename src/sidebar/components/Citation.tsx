@@ -82,8 +82,8 @@ export default function Citation({ event }: { event: ToolEvent }) {
   const ink = failed
     ? "text-red-700 dark:text-red-400"
     : pending
-      ? "text-stone-500 dark:text-stone-500"
-      : "text-stone-600 dark:text-stone-400";
+      ? "text-ink-4"
+      : "text-ink-2";
 
   return (
     <p className={`text-[11px] uppercase tracking-wider leading-relaxed ${ink}`}>

@@ -45,7 +45,7 @@ export default function SectionResults({ courses }: { courses: PanelCourse[] }) 
         <span className="group-open:hidden">Show {rows.length} {rows.length === 1 ? "section" : "sections"}</span>
         <span className="hidden group-open:inline">Hide sections</span>
       </summary>
-      <ul className="mt-2 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 divide-y divide-stone-100 dark:divide-stone-800 overflow-hidden">
+      <ul className="mt-2 card divide-y divide-line overflow-hidden">
         {rows.map(({ c, s }) => {
           const isKept = kept.has(s.crn);
           const overlaps = isKept
@@ -57,11 +57,11 @@ export default function SectionResults({ courses }: { courses: PanelCourse[] }) 
           return (
             <li key={s.crn} className="flex items-start gap-2 px-3 py-2.5">
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] leading-snug text-stone-900 dark:text-stone-100">
+                <p className="text-[13px] leading-snug text-ink">
                   <span className="font-semibold tabular-nums">{c.courseCode}</span>{" "}
-                  <span className="text-stone-700 dark:text-stone-300">{c.title}</span>
+                  <span className="text-ink-2">{c.title}</span>
                 </p>
-                <p className="mt-0.5 text-xs tabular-nums text-stone-600 dark:text-stone-400">
+                <p className="mt-0.5 text-xs tabular-nums text-ink-2">
                   {meetingsLabel(s.meetings)} ·{" "}
                   {s.seats > 0 ? `${s.seats} ${s.seats === 1 ? "seat" : "seats"}` : (
                     <span className="font-medium text-amber-700 dark:text-amber-300">Full</span>
@@ -83,7 +83,7 @@ export default function SectionResults({ courses }: { courses: PanelCourse[] }) 
                   className={`focus-ring shrink-0 min-w-[56px] rounded-md px-2 py-1 text-xs font-medium transition-[background-color,color,border-color,transform] duration-200 ease-spring active:scale-95 ${
                     isKept
                       ? "bg-fordham-maroon text-white hover:bg-fordham-maroon/90"
-                      : "border border-stone-300 dark:border-stone-700 text-stone-800 dark:text-stone-200 hover:border-fordham-maroon dark:hover:border-fordham-maroon-ink"
+                      : "border border-line-2 text-ink hover:border-fordham-maroon dark:hover:border-fordham-maroon-ink"
                   }`}
                 >
                   {isKept ? "Added" : "Add"}

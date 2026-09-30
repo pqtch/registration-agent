@@ -30,22 +30,22 @@ function Step({
   extra?: ReactNode;
 }) {
   return (
-    <li className="flex items-start gap-3 py-2.5">
+    <li className="flex items-start gap-3 px-3.5 py-3">
       <span
         aria-hidden
         className={`w-5 shrink-0 text-center text-xs font-mono mt-0.5 ${
-          done ? "text-green-700 dark:text-green-400" : "text-stone-600 dark:text-stone-400"
+          done ? "text-green-700 dark:text-green-400" : "text-ink-2"
         }`}
       >
         {done ? "✓" : `${n}.`}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-stone-800 dark:text-stone-100">
+        <p className="text-sm text-ink">
           {title}
           {done && <span className="sr-only"> — done</span>}
         </p>
         {detail && !done && (
-          <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5 leading-snug">{detail}</p>
+          <p className="text-xs text-ink-2 mt-0.5 leading-snug">{detail}</p>
         )}
         {!done && extra}
       </div>
@@ -127,7 +127,7 @@ export default function FirstRun({
   const settingsLink = (
     <button
       onClick={onOpenSettings}
-      className="focus-ring rounded px-2 py-1 text-xs font-medium text-fordham-maroon dark:text-fordham-maroon-ink border border-stone-200 dark:border-stone-700 hover:border-fordham-maroon dark:hover:border-fordham-maroon-ink transition-colors"
+      className="focus-ring rounded px-2 py-1 text-xs font-medium text-fordham-maroon dark:text-fordham-maroon-ink border border-line hover:border-fordham-maroon dark:hover:border-fordham-maroon-ink transition-colors"
     >
       Open Settings
     </button>
@@ -138,11 +138,11 @@ export default function FirstRun({
       {/* No wordmark here — the header bar 60px above already says RamPlan.
           Repeating the brand inside the card was a stutter; the heading's
           job is the task, not the name. */}
-      <p className="text-[15px] font-semibold text-stone-900 dark:text-stone-100 mb-2">
+      <p className="text-[15px] font-semibold text-ink mb-2">
         Set up in three steps.
       </p>
 
-      <ol className="divide-y divide-stone-100 dark:divide-stone-800 border-y border-stone-100 dark:border-stone-800">
+      <ol className="card divide-y divide-line overflow-hidden">
         <Step
           n={1}
           done={hasKey}
@@ -160,7 +160,7 @@ export default function FirstRun({
               href={DEGREEWORKS_URL}
               target="_blank"
               rel="noreferrer"
-              className="focus-ring rounded px-2 py-1 text-xs font-medium text-fordham-maroon dark:text-fordham-maroon-ink border border-stone-200 dark:border-stone-700 hover:border-fordham-maroon dark:hover:border-fordham-maroon-ink transition-colors inline-block"
+              className="focus-ring rounded px-2 py-1 text-xs font-medium text-fordham-maroon dark:text-fordham-maroon-ink border border-line hover:border-fordham-maroon dark:hover:border-fordham-maroon-ink transition-colors inline-block"
             >
               Open DegreeWorks
             </a>
@@ -176,7 +176,7 @@ export default function FirstRun({
               <button
                 onClick={loadCatalog}
                 disabled={fetching}
-                className="focus-ring rounded px-2 py-1 text-xs font-medium text-fordham-maroon dark:text-fordham-maroon-ink border border-stone-200 dark:border-stone-700 hover:border-fordham-maroon dark:hover:border-fordham-maroon-ink disabled:opacity-50 transition-colors"
+                className="focus-ring rounded px-2 py-1 text-xs font-medium text-fordham-maroon dark:text-fordham-maroon-ink border border-line hover:border-fordham-maroon dark:hover:border-fordham-maroon-ink disabled:opacity-50 transition-colors"
               >
                 {fetching ? "Loading…" : `Load ${defaultTerm.description}`}
               </button>
@@ -188,7 +188,7 @@ export default function FirstRun({
             <>
               {fetching && progress && (
                 <div
-                  className="h-1 mt-2 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden"
+                  className="h-1 mt-2 bg-sunk rounded-full overflow-hidden"
                   role="progressbar"
                   aria-label="Catalog download"
                   aria-valuemin={0}
@@ -226,13 +226,13 @@ export default function FirstRun({
           Let's get to know each other
         </button>
         {!ready && (
-          <p id="firstrun-locked" className="text-center text-xs text-stone-600 dark:text-stone-400">
+          <p id="firstrun-locked" className="text-center text-xs text-ink-2">
             Finish steps 1 and 2 first.
           </p>
         )}
         <button
           onClick={onSkip}
-          className="focus-ring w-full px-3 py-1.5 rounded-lg text-xs text-stone-600 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
+          className="focus-ring w-full px-3 py-1.5 rounded-lg text-xs text-ink-2 hover:text-ink transition-colors"
         >
           Skip for now
         </button>

@@ -136,8 +136,12 @@ export async function handleAIChat(
       for (let round = 0; round < 5; round++) {
         const stream = await client.messages.stream(
           {
-            model: "claude-sonnet-5",
-            max_tokens: 4096,
+            model: "claude-sonnet-5-5",
+            // Thinking counts toward max_tokens on Sonnet 5.5, so the cap sizes
+            // reasoning plus reply. Medium effort: multistep tool use over the
+            // audit, where a cheap wrong count costs the student more than latency.
+            max_tokens: 16000,
+            output_config: { effort: "medium" },
             system,
             tools: TOOLSETS[mode].map((t) => t.schema),
             messages: convo,
@@ -256,6 +260,12 @@ export async function handleAIChat(
       deps.broadcast({ type: "AI_NOTICE", kind: "tool-cap" });
     } else if (finalMessage?.stop_reason === "max_tokens") {
       deps.broadcast({ type: "AI_NOTICE", kind: "truncated" });
+    } else if (finalMessage?.stop_reason === "refusal") {
+      deps.broadcast({
+        type: "AI_ERROR",
+        error: "Claude declined to answer that one. Try asking it a different way.",
+      });
+      return;
     }
 
     deps.broadcast({ type: "AI_DONE" });

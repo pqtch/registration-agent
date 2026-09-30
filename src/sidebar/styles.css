@@ -59,6 +59,38 @@
   color-scheme: light dark;
 }
 
+/* The surface system (ADR 0041). Every text, surface and depth colour goes
+   through these; Tailwind reads them as `text-ink-2`, `bg-raised`, `shadow-lift`.
+   Channels, not hex, so `/alpha` modifiers still work. Light mode separates
+   surfaces with soft shadow, the way DegreeWorks' own cards do; dark mode
+   with lightness and a 1px ring, because a shadow on near-black is invisible. */
+:root {
+  --paper: 246 245 243;
+  --raised: 255 255 255;
+  --sunk: 237 235 232;
+  --line: 226 223 220;
+  --line-2: 205 201 197;
+  --ink: 28 25 23;
+  --ink-2: 68 64 60;
+  --ink-3: 87 83 78;
+  --ink-4: 120 113 108;
+  --lift-1: 0 1px 2px rgb(28 25 23 / 0.06), 0 2px 8px rgb(28 25 23 / 0.08);
+  --lift-2: 0 1px 3px rgb(28 25 23 / 0.08), 0 8px 22px rgb(28 25 23 / 0.12);
+}
+.dark {
+  --paper: 28 25 23;
+  --raised: 38 35 33;
+  --sunk: 20 18 17;
+  --line: 58 54 51;
+  --line-2: 82 77 73;
+  --ink: 245 245 244;
+  --ink-2: 200 194 188;
+  --ink-3: 168 162 158;
+  --ink-4: 130 123 118;
+  --lift-1: 0 0 0 1px rgb(255 255 255 / 0.07);
+  --lift-2: 0 0 0 1px rgb(255 255 255 / 0.09), 0 10px 28px rgb(0 0 0 / 0.45);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -73,6 +105,13 @@ body {
 }
 
 @layer components {
+  /* A surface you act on: raised off the paper by the theme's depth (shadow in
+     light, ring in dark). Lists inside divide with `divide-line`. */
+  .card {
+    background-color: rgb(var(--raised));
+    border-radius: 1rem;
+    box-shadow: var(--lift-1);
+  }
   /* Maroon is an 11.75:1 ink on white and a 1.51:1 ink on stone-900, so the
      ring has to swap with the theme. (focus-ring-on-maroon and the gold it
      used left with the solid maroon header — ADR 0031.) */
