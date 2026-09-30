@@ -85,8 +85,9 @@ and less trademark exposure than a public listing carrying Fordham branding.
 is now the home tab and fills itself from the audit (0042). There are saved chats (0043), a vector
 Fordhawke with a size setting (0044), and Fordham knowledge from fordham.edu with sources (0045),
 all on one surface-token system (0041). Chat runs on `claude-sonnet-5-5`, and the SDK is 0.130.
-Everything was verified through the render path. **The live DegreeWorks check of this build is
-Patch's**; so is the first real fordham.edu search, because the tests use a fake stream.
+Everything was verified through the render path. Patch checked it live the same evening: Plan-first
+stays. Next round is a real semester planner built on his actual registration; see the shell's
+`thread.maren.md`. The first real fordham.edu search is still unrun, because the tests use a fake stream.
 Permissions are unchanged; the key is still bring-your-own.
 
 **Ship blockers — all paperwork:**
