@@ -434,7 +434,7 @@ const SCENARIOS: Record<string, Scenario> = {
     ...READY_BASE,
     onLoad: [{ delay: 300, msg: { type: "PROFILE_LOADING" } }],
   },
-  plan: { ...READY_BASE, local: { ...LOCAL_READY, "plan:202720": PLAN }, page: "plan" },
+  plan: { ...READY_BASE, local: { ...LOCAL_READY, "plan:202720": PLAN, roadmap: { "2-6": "202810" } }, page: "plan" },
   "plan-conflict": { ...READY_BASE, local: { ...LOCAL_READY, "plan:202720": PLAN_CONFLICT }, page: "plan" },
   "plan-empty": { ...READY_BASE, page: "plan" },
 };

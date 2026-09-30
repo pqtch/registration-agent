@@ -14,6 +14,7 @@ import { backupFor, candidatesFor, type Candidate, type OpenRequirement } from "
 import { meetingsLabel, daysLabel, timeRange } from "../meetingFormat";
 import { advisorEmail, gmailComposeUrl } from "../advisorEmail";
 import { scheduleImage } from "../scheduleImage";
+import Ahead from "../components/Ahead";
 
 function useWho() {
   const [who, setWho] = useState({ firstName: null as string | null, advisorEmail: null as string | null, advisorName: null as string | null });
@@ -271,6 +272,8 @@ export default function PlanView({ onAsk }: { onAsk: (text: string) => void }) {
               </ul>
             )}
           </Group>
+
+          <Ahead term={sch.term} needed={needed} />
         </>
       )}
     </div>

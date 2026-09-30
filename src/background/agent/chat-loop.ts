@@ -19,6 +19,7 @@ import type { ChatMode, StudentGoal, ToolContext } from "./tools/types";
 import { withKeepalive } from "../keepalive";
 import type { AuditSummary } from "./audit-summary";
 import { planKey, planPromptText, termLabel, type PlannedSection } from "../../shared/plan";
+import { ROADMAP_KEY, livePlacements, nextTerms, roadmapPromptText, type Roadmap } from "../../shared/roadmap";
 import { FORDHAM_SEARCH_KEY, FORDHAM_SEARCH_TOOL, citedSources, isWebSearchDisabled, searchResults } from "./web-search";
 
 // Worker-owned capabilities the chat loop reaches for. Injected (not imported)
@@ -380,14 +381,20 @@ export async function handleAIChat(
 // The kept sections for the loaded catalog term, as prompt text (ADR 0040).
 // Empty string when no catalog is loaded: there is no term to plan against.
 async function loadPlanText(): Promise<string> {
-  const r = await chrome.storage.local.get(["catalogTerm", "catalogTermLabel", "auditSummary"]);
+  const r = await chrome.storage.local.get(["catalogTerm", "catalogTermLabel", "auditSummary", ROADMAP_KEY]);
   const term = r.catalogTerm as string | undefined;
   if (!term) return "";
   const key = planKey(term);
   const p = await chrome.storage.local.get(key);
   const label = (r.catalogTermLabel as string | undefined) ?? termLabel(term);
   const registered = ((r.auditSummary as AuditSummary | undefined)?.registered ?? []).filter((c) => c.term === term);
-  return planPromptText((p[key] as PlannedSection[] | undefined) ?? [], label, registered);
+  const plan = planPromptText((p[key] as PlannedSection[] | undefined) ?? [], label, registered);
+  // The roadmap (ADR 0046): later terms the student has placed requirements in.
+  const open = ((r.auditSummary as AuditSummary | undefined)?.blocks ?? []).flatMap((b) => b.open.map((o) => ({ ...o, block: b.title })));
+  const roadmap = livePlacements((r[ROADMAP_KEY] as Roadmap | undefined) ?? {}, nextTerms(term, 4));
+  const placed = open.filter((o) => roadmap[o.id]).map((o) => ({ label: o.label, block: o.block, term: roadmap[o.id] }));
+  const ahead = roadmapPromptText(placed, 0);
+  return ahead ? `${plan}\n\n${ahead}` : plan;
 }
 
 
