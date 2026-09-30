@@ -84,7 +84,7 @@
       <tr><td>Your name, Banner student ID, and advisor's name and email</td><td>Fordham DegreeWorks</td><td>Your browser only — <strong>never sent to Anthropic</strong> (see below)</td></tr>
       <tr><td>A short advising profile RamPlan derives from your conversations (e.g. "prefers morning classes")</td><td>Generated on your device from your chats</td><td>Your browser (<code>chrome.storage.local</code>)</td></tr>
       <tr><td>Course catalog for a term you choose to load</td><td>Fordham Banner, via your existing logged-in session</td><td>Your browser (<code>IndexedDB</code>)</td></tr>
-      <tr><td>Your chat messages with the advisor</td><td>You type them</td><td>Your browser session storage</td></tr>
+      <tr><td>Your chat messages with the advisor</td><td>You type them</td><td>Your browser (<code>chrome.storage.local</code>), as saved chats you can delete one by one; the setup conversation stays in session storage and clears when the browser closes</td></tr>
     </tbody>
   </table>
   </div>

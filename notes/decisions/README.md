@@ -73,3 +73,4 @@ For a narrative pass through the whole decision arc, read them in numerical orde
 | [0040](./0040-the-plan-has-a-home.md) | The plan has a home: Plan tab, week grid, section cards, where you stand · Builds on 0037 | Accepted | 2026-09-30 |
 | [0041](./0041-one-surface-system-shadow-in-light-ring-in-dark.md) | One surface system: tokens for ink, surfaces and depth; shadow in light, ring in dark · Amends 0025, 0031 | Accepted | 2026-09-30 |
 | [0042](./0042-the-plan-fills-itself-from-the-audit.md) | The plan fills itself from the audit: term picker, registered classes, still-needed sections, backups, Gmail draft · Extends 0040 | Accepted | 2026-09-30 |
+| [0043](./0043-saved-chats.md) | Saved chats: New chat, a chat list, undo on delete; chats persist locally · Amends 0032 | Accepted | 2026-09-30 |

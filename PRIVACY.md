@@ -31,7 +31,7 @@ RamPlan works with the following data, all read from systems you are already log
 | Your name, Banner student ID, and advisor's name and email | Fordham DegreeWorks | Your browser only — **never sent to Anthropic** (see below) |
 | A short advising profile RamPlan derives from your conversations (e.g. "prefers morning classes") | Generated on your device from your chats | Your browser (`chrome.storage.local`) |
 | Course catalog for a term you choose to load | Fordham Banner, via your existing logged-in session | Your browser (`IndexedDB`) |
-| Your chat messages with the advisor | You type them | Your browser session storage |
+| Your chat messages with the advisor | You type them | Your browser (`chrome.storage.local`), as saved chats you can delete one by one; the setup conversation stays in session storage and clears when the browser closes |
 
 RamPlan does **not** collect your Fordham password or login credentials. It reads DegreeWorks
 and Banner through the session you have already authenticated in your own browser; it never
