@@ -4,6 +4,8 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import AuditChat from "./pages/AuditChat";
 import Settings from "./pages/Settings";
+import PlanView from "./pages/PlanView";
+import { usePlan } from "./usePlan";
 import logoUrl from "../../tools/mascot/assets/logo-header.png";
 import logoDarkUrl from "../../tools/mascot/assets/logo-header-dark.png";
 import {
@@ -14,17 +16,28 @@ import {
   THEME_KEY,
 } from "./theme";
 
-type Page = "chat" | "settings";
+type Page = "chat" | "plan" | "settings";
+
+// ?page= picks the opening tab. Inert in the extension (the panel URL carries
+// no query); the dev harness sets it for scenarios that open on Plan.
+function initialPage(): Page {
+  const p = new URLSearchParams(window.location.search).get("page");
+  return p === "settings" || p === "plan" ? p : "chat";
+}
 
 export default function App() {
   // Initial page honors ?page=settings — inert in the extension (the panel
   // URL carries no query) but lets the dev harness screenshot Settings
   // without scripting a click.
-  const [page, setPage] = useState<Page>(() =>
-    new URLSearchParams(window.location.search).get("page") === "settings"
-      ? "settings"
-      : "chat"
-  );
+  const [page, setPage] = useState<Page>(initialPage);
+  const plan = usePlan();
+  // "Ask the advisor" from another view: switch to the Advisor, hand it the
+  // text, and let AuditChat send it as a normal turn when it's ready.
+  const [pendingAsk, setPendingAsk] = useState<{ id: number; text: string } | null>(null);
+  const askAdvisor = (text: string) => {
+    setPendingAsk({ id: Date.now(), text });
+    setPage("chat");
+  };
 
   // Keep a ref to the current theme preference so watchSystemTheme can
   // decide whether to re-apply on OS changes without triggering re-renders.
@@ -63,7 +76,7 @@ export default function App() {
           wordmark and every accent below, the way Messages carries blue
           without painting its navigation bar blue. backdrop-blur matters the
           moment content scrolls beneath the bar. */}
-      <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 pl-4 pr-2 py-2 bg-stone-50 dark:bg-stone-900 border-b border-stone-200/70 dark:border-stone-800 shrink-0 z-10">
+      <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 pl-3 min-[360px]:pl-4 pr-2 py-2 bg-stone-50 dark:bg-stone-900 border-b border-stone-200/70 dark:border-stone-800 shrink-0 z-10">
         {/* Brand lockup: the single "Ram Plan" logo image — the pixel-art
             Fordhawke head + a fountain-pen cursive wordmark, baked as one asset.
             It supersedes the 0036 crest-plus-Newsreader pairing: head and
@@ -79,12 +92,12 @@ export default function App() {
         <img
           src={logoUrl}
           alt="Ram Plan"
-          className="h-8 w-auto select-none dark:hidden"
+          className="h-7 min-[360px]:h-8 w-auto select-none dark:hidden"
         />
         <img
           src={logoDarkUrl}
           alt="Ram Plan"
-          className="hidden h-8 w-auto select-none dark:block"
+          className="hidden h-7 min-[360px]:h-8 w-auto select-none dark:block"
         />
         {/* iOS segmented control: recessed track, raised active segment.
             stone-200/70 — stone-100 vanished against the stone-50 bar. */}
@@ -94,6 +107,24 @@ export default function App() {
         >
           <NavButton active={page === "chat"} onClick={() => setPage("chat")}>
             Advisor
+          </NavButton>
+          <NavButton active={page === "plan"} onClick={() => setPage("plan")}>
+            Plan
+            {plan.sections.length > 0 && (
+              <>
+                <span
+                  aria-hidden
+                  className={`ml-1 tabular-nums ${
+                    plan.conflicts.length ? "text-red-700 dark:text-red-400" : "text-stone-500 dark:text-stone-400"
+                  }`}
+                >
+                  {plan.sections.length}
+                </span>
+                <span className="sr-only">
+                  , {plan.sections.length} kept{plan.conflicts.length ? ", with overlaps" : ""}
+                </span>
+              </>
+            )}
           </NavButton>
           <NavButton active={page === "settings"} onClick={() => setPage("settings")}>
             Settings
@@ -111,7 +142,17 @@ export default function App() {
           className="absolute inset-0 flex flex-col animate-page-in"
           style={{ display: page === "chat" ? "flex" : "none" }}
         >
-          <AuditChat onOpenSettings={() => setPage("settings")} />
+          <AuditChat
+            onOpenSettings={() => setPage("settings")}
+            pendingAsk={pendingAsk}
+            onAskTaken={() => setPendingAsk(null)}
+          />
+        </div>
+        <div
+          className="absolute inset-0 animate-page-in"
+          style={{ display: page === "plan" ? "block" : "none" }}
+        >
+          <PlanView onAsk={askAdvisor} onOpenSettings={() => setPage("settings")} />
         </div>
         <div
           className="absolute inset-0 animate-page-in"
@@ -137,7 +178,7 @@ function NavButton({
     <button
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`focus-ring rounded-md px-2.5 py-1 text-xs font-medium transition-[background-color,color,box-shadow,transform] duration-200 ease-spring active:scale-95 ${
+      className={`focus-ring rounded-md px-2 min-[360px]:px-2.5 py-1 text-xs font-medium transition-[background-color,color,box-shadow,transform] duration-200 ease-spring active:scale-95 ${
         active
           ? "bg-white dark:bg-stone-600 text-stone-900 dark:text-stone-50 shadow-sm"
           : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"

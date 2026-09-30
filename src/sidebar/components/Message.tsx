@@ -16,6 +16,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ConversationMessage } from "../../shared/types";
 import Citation from "./Citation";
+import SectionResults from "./SectionResults";
 import OnboardingSavesBubble from "./OnboardingSavesBubble";
 // [NAME]/[ADVISOR]/[ADVISOR_EMAIL] render-time substitution — extracted to
 // its own module (ADR 0032) so the Settings profile card can share it.
@@ -73,7 +74,10 @@ function Message({
       {toolEvents.length > 0 && (
         <div className="mb-1.5 space-y-0.5">
           {toolEvents.map((ev, idx) => (
-            <Citation key={idx} event={ev} />
+            <div key={idx}>
+              <Citation event={ev} />
+              {ev.courses && ev.courses.length > 0 && <SectionResults courses={ev.courses} />}
+            </div>
           ))}
         </div>
       )}

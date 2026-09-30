@@ -37,3 +37,6 @@ __pycache__/
 # Glob, not one filename: degreeworks-api-reference.md (46KB of captured endpoints)
 # was left uncovered and would be staged by any `git add -A`.
 notes/degreeworks-api*.md
+
+# tools/shots.sh default output (harness renders only, still kept out of git)
+shots/

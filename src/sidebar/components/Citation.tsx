@@ -10,7 +10,8 @@
 // a failed search broadcasts `courseCount: 0` plus `error`. Read `error`
 // FIRST or a broken search renders as "0 results", which is a lie.
 
-import type { ToolEvent } from "../../shared/types";
+import type { Day, ToolEvent } from "../../shared/types";
+import { daysLabel } from "../meetingFormat";
 
 function describeSearch(input: Record<string, unknown>): string {
   const parts: string[] = [];
@@ -29,14 +30,10 @@ function describeSearch(input: Record<string, unknown>): string {
   return parts.join(" · ");
 }
 
-// Registrar day codes (R = Thursday, S/U = weekend, ADR 0023) spoken as the
-// days a student reads. "T" alone was undecodable (audit 2026-09-30, #4).
-const DAY_NAMES: Record<string, string> = {
-  M: "Mon", T: "Tue", W: "Wed", R: "Thu", F: "Fri", S: "Sat", U: "Sun",
-};
-
+// Day codes spoken as the days a student reads (Tue, not T; audit
+// 2026-09-30, #4). Shared with the plan and the section cards.
 function daysOf(days: unknown[]): string {
-  return days.map((d) => DAY_NAMES[String(d)] ?? String(d)).join("/");
+  return daysLabel(days.map(String) as Day[]);
 }
 
 function memories(n: number): string {

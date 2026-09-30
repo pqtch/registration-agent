@@ -65,3 +65,9 @@ For a narrative pass through the whole decision arc, read them in numerical orde
 | [0032](./0032-the-claude-app-dialect.md) | The Claude-app dialect: warm paper, one grotesque, pinned-turn scrolling, paced streaming · Amends 0024/0031 · Amended by 0033 | Accepted | 2026-07-09 |
 | [0033](./0033-two-tier-type-serif-display-grotesque-ui.md) | Two-tier type: a Newsreader serif display layer (greeting, wordmark) over the grotesque UI · Amends 0032's "one grotesque" · Body face swapped by 0034 | Accepted | 2026-07-12 |
 | [0034](./0034-body-face-hanken-grotesk-rounder-styrene-standin.md) | Body face: Hanken Grotesk, the rounder Styrene stand-in (swaps Schibsted; two-tier structure stands) · Amends 0032/0033 | Accepted | 2026-07-12 |
+| [0035](./0035-logo-mark-italic-wordmark-and-mascot-spike.md) | The ram mark, the italic wordmark, and a mascot spike · Builds on 0033/0034 | Accepted | 2026-07-12 |
+| [0036](./0036-fordhawke-crest-logo-not-a-font.md) | The Fordhawke crest: a logo, not a font · Supersedes 0035's wordmark | Accepted | 2026-07-12 |
+| [0037](./0037-panel-payloads-the-model-never-sees.md) | Panel payloads: tool results carry sidebar data the model never sees · Extends 0019, keeps 0028 | Accepted | 2026-09-30 |
+| [0038](./0038-the-log-floor-fits-itself.md) | The log's floor fits itself; "at the bottom" is measured, not remembered · Repairs 0032's pin-to-top | Accepted | 2026-09-30 |
+| [0039](./0039-motion-that-holds-up-on-a-slow-laptop.md) | Motion that holds up on a slow laptop: ping-pong sprites, dissolving poses, memoized prose | Accepted | 2026-09-30 |
+| [0040](./0040-the-plan-has-a-home.md) | The plan has a home: Plan tab, week grid, section cards, where you stand · Builds on 0037 | Accepted | 2026-09-30 |

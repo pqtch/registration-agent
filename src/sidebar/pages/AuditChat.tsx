@@ -12,6 +12,8 @@ import type {
 import Message from "../components/Message";
 import Notice from "../components/Notice";
 import { describeTurnError } from "../errorCopy";
+import { useAuditSummary } from "../useAuditSummary";
+import WhereYouStand from "../components/WhereYouStand";
 import StatusStrip from "../components/StatusStrip";
 import FirstRun, { DEGREEWORKS_URL } from "../components/FirstRun";
 import {
@@ -91,9 +93,16 @@ function persistSession(
 
 export default function AuditChat({
   onOpenSettings,
+  pendingAsk,
+  onAskTaken,
 }: {
   onOpenSettings: () => void;
+  // A question asked from another view (Plan tab's "Find sections for…"),
+  // sent here as a normal turn once the pane is ready for it.
+  pendingAsk?: { id: number; text: string } | null;
+  onAskTaken?: () => void;
 }) {
+  const auditSummary = useAuditSummary();
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -602,6 +611,9 @@ export default function AuditChat({
                     // Present only when the tool threw. Carried so the chip can
                     // render a failed state instead of claiming "0 results".
                     error: message.error,
+                    // The sections the search returned, for the cards
+                    // (ADR 0037). Panel-only; never sent back to the model.
+                    ...(message.courses ? { courses: message.courses } : {}),
                   };
                   const updatedMsg = { ...m, toolEvents: updatedEvents };
                   return [...prev.slice(0, i), updatedMsg, ...prev.slice(i + 1)];
@@ -979,6 +991,14 @@ export default function AuditChat({
   // key read is still in flight on mount.
   const noKeyYet = welcomeDecided && !hasKey;
 
+  useEffect(() => {
+    if (!pendingAsk || !welcomeDecided || loading || showContinueButton) return;
+    sendMessage(pendingAsk.text);
+    onAskTaken?.();
+    // sendMessage reads current state; the id is what makes a repeat ask fire.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAsk?.id, welcomeDecided, loading, showContinueButton]);
+
   return (
     <div className="flex flex-col h-full">
 
@@ -1133,6 +1153,12 @@ export default function AuditChat({
                 stone-100 dissolved into the background exactly as the settings
                 cards did. stone-200 is the same hairline value that restored
                 the card edge. Dark reads on lightness alone (stone-800). */}
+            {/* Where you stand (ADR 0040): once the audit has been summarised,
+                its open requirements ARE the suggestions. The generic four
+                remain only until a first refresh writes the summary. */}
+            {auditSummary ? (
+              <WhereYouStand summary={auditSummary} onAsk={(t) => sendMessage(t)} />
+            ) : (
             <div className="divide-y divide-stone-200 dark:divide-stone-800 border-y border-stone-200 dark:border-stone-800">
               {SUGGESTIONS.map((s) => (
                 <button
@@ -1144,6 +1170,7 @@ export default function AuditChat({
                 </button>
               ))}
             </div>
+            )}
           </div>
         )}
 

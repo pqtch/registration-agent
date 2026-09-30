@@ -245,3 +245,14 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* The week grid's overlap window (WeekGrid.tsx, ADR 0040): hatched in the danger
+   ink, over the blocks, so a clash reads at a squint in either theme. */
+.week-clash-band {
+  background-image: repeating-linear-gradient(135deg, rgb(220 38 38 / 0.5) 0 1.5px, transparent 1.5px 5px);
+  box-shadow: inset 0 0 0 1px rgb(220 38 38 / 0.6);
+}
+.dark .week-clash-band {
+  background-image: repeating-linear-gradient(135deg, rgb(248 113 113 / 0.55) 0 1.5px, transparent 1.5px 5px);
+  box-shadow: inset 0 0 0 1px rgb(248 113 113 / 0.7);
+}

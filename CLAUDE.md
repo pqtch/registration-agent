@@ -25,7 +25,7 @@ doc gets fixed.
 
 ```bash
 npm run build      # vite build → dist/   (~3s)
-npm test           # vitest run           (78 tests, 10 files)
+npm test           # vitest run
 npm run dev        # vite dev server on :5173 — needed for the render path below
 npm run build:win  # build + rsync dist/ to /mnt/c/Users/Public/ramplan-dist/ (WSL→Windows Chrome)
 ```
@@ -41,34 +41,28 @@ npm run dev &   # serves :5173
 # then open http://localhost:5173/src/sidebar/dev.html?state=chat
 ```
 
-**Screenshot capture is unwired.** This file used to name a `webshot.sh` wrapper; neither it
-nor the directory it lived in has existed since 2026-08-19, so following that line ran a
-command that was not there. Chrome-for-Testing itself IS live at
-`~/.local/opt/chrome-for-testing/chrome` — only the wrapper is missing. Removed 2026-09-02
-rather than re-pointed, because screenshot wiring for this workspace is still undecided and a
-line that misleads is worse than an absent one.
+**Screenshots: `tools/shots.sh [OUTDIR] [WIDTH]`** (defaults `shots/`, 400). It shoots every
+harness scenario in light and dark with the `agent-browser` CLI (`npm i -g agent-browser`),
+reading the scenario list, and which scenarios need a sent message, from the harness itself
+(`window.__RAMPLAN_SCENARIOS`), so a new scenario needs no script edit. It fails loudly if
+the page isn't the harness: a dead dev server renders Chrome's error page, which
+screenshots perfectly well. Look at every shot; a shot nobody opened proves nothing.
 
-Until a wrapper lands, a visual verdict is made by eye in a browser, and any skill whose first
-step is "capture the page" blocks there by design. The sidebar's real width is ~400px — view
-near that, not at 1280 — and the theme default is `system`, so check both.
+The sidebar's real width is ~400px (Chrome's side panel minimum is 320px); check both, not
+1280. The theme default is `system`, so check light and dark.
 
-**Verified working 2026-07-19** (ported from frozen claudeV2; py-playwright is installed but
-has NO browsers — don't reach for it).
+Scenarios are listed with one-line descriptions at the top of `src/sidebar/dev/chrome-mock.ts`
+(the code is the list; don't copy it here). `?state=plan*` scenarios open on the Plan tab via
+`&page=plan`, which the harness adds. In `chat`/`empty`, typing + Enter plays a canned slow
+stream, so mid-stream states are reachable.
 
-13 scenarios via `?state=`: `firstrun`, `firstrun-mid`, `empty`, `chat`, `whatif`, `saves`,
-`error`, `toolcap`, `audit-expired`, `audit-error`, `no-audit`, `toast`, `profile-loading`.
-Full list with descriptions at the top of `chrome-mock.ts`. In `chat`/`empty`, typing + Enter
-plays a canned slow stream so mid-stream states are reachable.
-
-Some states (`error`, `toolcap`, `whatif`'s run) only render in response to a *sent* message,
-which a static screenshot can't type. Add `&autosend` to drive the real composer on load —
-`&autosend` sends a default probe, `&autosend=Your%20text` sends custom text. Pair with
-`--delay 2500` so the reply and any mid-stream pose are captured. Dev-only (`boot.ts`), never
-bundled.
+Some states (`error`, `toolcap`, `whatif`'s run) only render in response to a *sent* message.
+`&autosend` drives the real composer on load (`&autosend=Your%20text` for custom text);
+`shots.sh` adds it for scenarios flagged `autosend`. Dev-only (`boot.ts`), never bundled.
 
 Both `dev.html` and `boot.ts` are absent from `manifest.json`, so `@crxjs` never bundles the
-harness (mock + autosend) — it cannot ship. Confirm with `grep -rl chrome-mock dist/` after a
-build: zero hits.
+harness (mock + autosend). It cannot ship. Confirm after a build: `grep -rl
+"chrome-mock\|__RAMPLAN" dist/` prints nothing.
 
 ## Repo conventions
 
@@ -87,10 +81,13 @@ Goal: RamPlan on the Chrome Web Store, **unlisted** (link-installable, invisible
 testers run it against **their own** DegreeWorks. Unlisted was chosen for lower review scrutiny
 and less trademark exposure than a public listing carrying Fordham branding.
 
-**Code is publish-ready.** Build clean; 78/78 tests pass; `dist/manifest.json` valid; all four
-permissions (`storage`, `tabs`, `scripting`, `sidePanel`) trace to real call sites — no
-unjustified permission (the top rejection cause); bring-your-own API key, no bundled secret.
-All 13 UI states verified via the render path. Nothing code-side is known to block submission.
+**Code state (2026-09-30).** A rework landed on top of the store-ready build: audit fixes
+(0038), motion (0039), panel payloads (0037), and the Plan tab, section cards and where you
+stand (0040). Verified standalone through the render path (every scenario, light and dark,
+400 and 320px, axe on the new states, keyboard walk) with the build clean and the harness out
+of `dist/`. **Not yet checked live in DegreeWorks.** That is Patch's to do by hand before
+submission. Permissions are unchanged (`storage`, `tabs`, `scripting`, `sidePanel`); the key is
+still bring-your-own.
 
 **Ship blockers — all paperwork:**
 1. **Privacy policy — drafted, needs hosting.** Text lives in `PRIVACY.md`; a self-contained
