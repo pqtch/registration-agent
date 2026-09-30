@@ -18,18 +18,23 @@ import {
 
 type Page = "chat" | "plan" | "settings";
 
-// ?page= picks the opening tab. Inert in the extension (the panel URL carries
-// no query); the dev harness sets it for scenarios that open on Plan.
-function initialPage(): Page {
+// ?page= picks the opening tab (the dev harness sets it). Otherwise the Plan is
+// home once setup is done; until then the Advisor tab, where the setup steps are.
+function pageFromUrl(): Page | null {
   const p = new URLSearchParams(window.location.search).get("page");
-  return p === "settings" || p === "chat" ? p : "plan";
+  return p === "settings" || p === "chat" || p === "plan" ? p : null;
 }
 
 export default function App() {
-  // Initial page honors ?page=settings — inert in the extension (the panel
-  // URL carries no query) but lets the dev harness screenshot Settings
-  // without scripting a click.
-  const [page, setPage] = useState<Page>(initialPage);
+  const [page, setPage] = useState<Page | null>(pageFromUrl);
+  useEffect(() => {
+    if (page) return;
+    chrome.storage.local.get(["anthropicApiKey", "auditText"], (r) =>
+      setPage(r.anthropicApiKey && r.auditText ? "plan" : "chat")
+    );
+    // Decided once, on open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const plan = useSchedule();
   // "Ask the advisor" from another view: switch to the Advisor, hand it the
   // text, and let AuditChat send it as a normal turn when it's ready.
