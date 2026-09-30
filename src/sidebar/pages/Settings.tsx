@@ -875,8 +875,13 @@ function Section({
 }) {
   return (
     <section>
-      <div className="flex items-center justify-between px-4 mb-1.5">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-stone-600 dark:text-stone-400">
+      {/* Fordham's register is the catalog, not the dashboard: section heads
+          are set in the display serif (ADR 0033's personality tier) in maroon
+          ink, over a maroon hairline — the way a bulletin heads its sections.
+          Tracked grey caps read as generic OS settings. Maroon only WRITES
+          via the light/dark ink pair; controls stay neutral (ADR 0032). */}
+      <div className="flex items-baseline justify-between gap-3 mx-4 mb-2 pb-1 border-b border-fordham-maroon/25 dark:border-fordham-maroon-ink/30">
+        <h2 className="font-serif text-[17px] font-medium leading-tight text-fordham-maroon dark:text-fordham-maroon-ink">
           {label}
         </h2>
         {labelAction}
