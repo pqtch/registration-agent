@@ -11,6 +11,7 @@
 // On wide panels the prose caps at 65ch — an unbounded 900px line is as
 // unreadable as a 28-character one.
 
+import { memo } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ConversationMessage } from "../../shared/types";
@@ -20,17 +21,22 @@ import OnboardingSavesBubble from "./OnboardingSavesBubble";
 // its own module (ADR 0032) so the Settings profile card can share it.
 import { personalize } from "../personalize";
 
-export default function Message({
+function Message({
   message,
   firstName,
   advisorEmail,
   advisorName,
+  enter = true,
 }: {
   message: ConversationMessage;
   firstName: string | null;
   advisorEmail: string | null;
   advisorName: string | null;
+  // False for messages restored on panel open: they're already there, so
+  // they don't animate in all at once (no page-load choreography).
+  enter?: boolean;
 }) {
+  const enterCls = enter ? " animate-msg-in" : "";
   // System-action bubble (end-of-intake save batch). Rendered distinctly from
   // AI prose — it's a UI event, not the model's voice.
   if (message.systemAction?.kind === "onboarding-saves") {
@@ -47,7 +53,7 @@ export default function Message({
       // data-turn="user" is the scroll contract (ADR 0032): AuditChat pins
       // the newest user turn to the top of the viewport on send, and this
       // attribute is what it finds. Rename it and scrolling silently dies.
-      <div className="flex justify-end animate-msg-in" data-turn="user">
+      <div className={`flex justify-end${enterCls}`} data-turn="user">
         {/* iMessage bubble geometry: uniform 18px radius, no corner notch —
             the notch read as a speech-bubble affordance from an older chat
             idiom. origin-bottom-right so msg-in's scale settles from where
@@ -63,7 +69,7 @@ export default function Message({
 
   const toolEvents = message.toolEvents ?? [];
   return (
-    <div className="animate-msg-in">
+    <div className={enterCls.trim() || undefined}>
       {toolEvents.length > 0 && (
         <div className="mb-1.5 space-y-0.5">
           {toolEvents.map((ev, idx) => (
@@ -134,3 +140,10 @@ export default function Message({
     </div>
   );
 }
+
+// Memoized: while an answer streams, the pane re-renders every animation frame.
+// Without this, every finished message in the log re-parsed its markdown each
+// frame (the largest share of main-thread time in a 6x-throttled trace,
+// 2026-09-30). Finished messages keep their object identity across
+// setMessages (only the streaming tail is replaced), so a shallow compare holds.
+export default memo(Message);

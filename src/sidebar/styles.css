@@ -143,44 +143,31 @@ body {
   background-size: auto var(--cell);
   image-rendering: pixelated;
 }
-@keyframes mascot-play {
-  from {
-    background-position-x: 0;
-  }
-  to {
-    background-position-x: calc(var(--frames) * var(--cell) * -1);
-  }
+/* Playback lives in ../mascotMotion.ts (Web Animations, ping-pong for gestures);
+   CSS owns only the cell. The stage holds one layer per pose, stacked, so a
+   pose change dissolves: the incoming layer fades in over the outgoing one,
+   which fades out a beat later, and the figure never goes see-through. */
+.mascot-stage {
+  position: relative;
+  display: inline-block;
 }
-/* Timings are Patch's 07-13 gate values (PIPELINE.md): ms/frame x frame count.
-   steps() needs a literal count — it cannot read a custom property — so each
-   state carries its own animation declaration rather than sharing one. */
-.mascot--idle {
-  --frames: 6;
-  animation: mascot-play 1080ms steps(6) infinite;
+.mascot-stage > .mascot {
+  position: absolute;
+  inset: 0;
 }
-.mascot--walk {
-  --frames: 8;
-  animation: mascot-play 960ms steps(8) infinite;
+.mascot-fade-in {
+  animation: mascot-fade-in 140ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
-.mascot--walk-left {
-  --frames: 8;
-  animation: mascot-play 960ms steps(8) infinite;
+.mascot-fade-out {
+  animation: mascot-fade-out 140ms cubic-bezier(0.23, 1, 0.32, 1) 60ms both;
 }
-.mascot--wave {
-  --frames: 8;
-  animation: mascot-play 1120ms steps(8) infinite;
+@keyframes mascot-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-.mascot--ponder {
-  --frames: 6;
-  animation: mascot-play 1200ms steps(6) infinite;
-}
-.mascot--whatif {
-  --frames: 8;
-  animation: mascot-play 1280ms steps(8) infinite;
-}
-.mascot--reading {
-  --frames: 6;
-  animation: mascot-play 1200ms steps(6) infinite;
+@keyframes mascot-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 /* The resident mascot's corner anchor: an overlay pinned to the pane's
    bottom-right, above the composer, that does NOT scroll with the log. Chrome
@@ -235,13 +222,8 @@ body {
   bottom: -1.375rem;
 }
 
-/* Reduced motion: freeze on frame 0. The component also forces the idle sprite
-   in this case, so the rest state is a standing ram, not a stalled gesture.
-   This rule is the belt to that suspenders — it holds even before JS runs. */
-.mascot--static {
-  animation: none !important;
-  background-position-x: 0 !important;
-}
+/* Reduced motion: frame 0. The component already skips the animation and forces
+   the idle sprite; this holds even before JS runs. */
 @media (prefers-reduced-motion: reduce) {
   .mascot {
     animation: none !important;

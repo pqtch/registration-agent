@@ -54,7 +54,8 @@ Patch round-1 verdicts (07-13): idle/walk/ponder/reading good · wave regen'd (8
 arm pinned) · whatif regen'd (purple spiral + sparks + rubbing hand). Pink fixed pipeline-wide.
 Timing: idle 180ms · walk 120 · wave 140 · whatif 160 · default 200.
 
-Integration after gate: Maren wires strips via CSS steps() (mechanism proven in her 0035 spike;
+Integration after gate (superseded 2026-09-30 by ADR 0039: playback now runs from the table in
+`src/sidebar/mascotMotion.ts` via Web Animations, ping-pong for gestures as previewed): Maren wires strips via CSS steps() (mechanism proven in her 0035 spike;
 sprite in panel, prefers-reduced-motion static fallback). Landed `d68f23e`. Render-size rule
 from that pass: 130px cells are crisp ONLY at 1x and exact integer halves (65px) — a placement
 needing an in-between size gets a natively-rendered smaller strip, never CSS scaling.

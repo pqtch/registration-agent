@@ -730,7 +730,7 @@ export default function Settings() {
             </div>
             <div className="h-1.5 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
               <div
-                className="h-full bg-fordham-maroon dark:bg-fordham-maroon-ink rounded-full transition-all duration-200 ease-spring"
+                className="h-full bg-fordham-maroon dark:bg-fordham-maroon-ink rounded-full transition-[width] duration-200 ease-spring"
                 style={{
                   width: `${
                     catalogProgress.total > 0
@@ -829,7 +829,7 @@ export default function Settings() {
                 role="radio"
                 aria-checked={theme === option}
                 onClick={() => selectTheme(option)}
-                className={`focus-ring flex-1 rounded-md text-xs font-medium py-1.5 capitalize transition-all duration-200 ease-spring active:scale-95 ${
+                className={`focus-ring flex-1 rounded-md text-xs font-medium py-1.5 capitalize transition-[background-color,color,box-shadow,transform] duration-200 ease-spring active:scale-95 ${
                   theme === option
                     ? "bg-white dark:bg-stone-600 text-stone-900 dark:text-stone-50 shadow-sm"
                     : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"

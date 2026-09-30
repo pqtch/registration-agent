@@ -192,7 +192,7 @@ export default function FirstRun({
                   aria-valuenow={progress.done}
                 >
                   <div
-                    className="h-full bg-fordham-maroon dark:bg-fordham-maroon-ink rounded-full transition-all duration-200 ease-spring"
+                    className="h-full bg-fordham-maroon dark:bg-fordham-maroon-ink rounded-full transition-[width] duration-200 ease-spring"
                     style={{
                       width: `${progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}%`,
                     }}

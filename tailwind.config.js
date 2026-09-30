@@ -43,9 +43,9 @@ export default {
         spring: "cubic-bezier(0.32, 0.72, 0, 1)",
       },
       keyframes: {
+        // No overshoot: a save confirmation settles, it doesn't bounce.
         "toast-pop": {
-          "0%": { opacity: "0", transform: "translateY(6px) scale(0.96)" },
-          "60%": { opacity: "1", transform: "translateY(-1px) scale(1.02)" },
+          "0%": { opacity: "0", transform: "translateY(4px) scale(0.98)" },
           "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
         },
         // A message entering the page — lift + settle, like a sent iMessage:
@@ -68,8 +68,8 @@ export default {
         },
       },
       animation: {
-        "toast-pop": "toast-pop 0.25s ease-out",
-        "msg-in": "msg-in 0.32s cubic-bezier(0.32, 0.72, 0, 1)",
+        "toast-pop": "toast-pop 0.2s cubic-bezier(0.23, 1, 0.32, 1)",
+        "msg-in": "msg-in 0.26s cubic-bezier(0.32, 0.72, 0, 1)",
         "page-in": "page-in 0.25s cubic-bezier(0.32, 0.72, 0, 1)",
         sweep: "sweep 1.4s ease-in-out infinite",
       },

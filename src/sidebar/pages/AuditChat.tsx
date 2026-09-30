@@ -258,6 +258,9 @@ export default function AuditChat({
   const floorRef = useRef<HTMLDivElement>(null);
   const pinnedTurnRef = useRef<HTMLElement | null>(null);
   const landAtEndRef = useRef(false);
+  // How many messages came back from storage on mount; they render without
+  // an entrance animation.
+  const restoredCountRef = useRef(0);
 
   // Load audit text + profile + first name + restore session on mount
   useEffect(() => {
@@ -308,6 +311,7 @@ export default function AuditChat({
         // A reopened panel lands where the conversation ended, not at its
         // first line with the resident standing over the middle of it.
         landAtEndRef.current = true;
+        restoredCountRef.current = saved.length;
         setMessages(saved);
         if (savedMode) setOnboardingMode(true);
         if (savedShowContinue) setShowContinueButton(true);
@@ -734,6 +738,7 @@ export default function AuditChat({
         case "ONBOARDING_RESET": {
           // Student clicked "Re-run onboarding" in Settings. Wipe this tab's
           // chat state without forcing a close/reopen of the side panel.
+          restoredCountRef.current = 0;
           setMessages([]);
           setOnboardingMode(false);
           setOnboardingFinalized(false);
@@ -961,6 +966,7 @@ export default function AuditChat({
     setShowContinueButton(false);
     setOnboardingFinalized(false);
     onboardingFinalizedRef.current = false;
+    restoredCountRef.current = 0;
     setMessages([]);
     // The persist effect skips empty arrays — remove the keys explicitly or
     // the intake transcript resurrects on next panel open.
@@ -1145,6 +1151,7 @@ export default function AuditChat({
           <Message
             key={i}
             message={msg}
+            enter={i >= restoredCountRef.current}
             firstName={firstName}
             advisorEmail={advisorEmail}
             advisorName={advisorName}
@@ -1196,7 +1203,7 @@ export default function AuditChat({
           <div className="flex justify-center pt-2 pb-1">
             <button
               onClick={continueToChat}
-              className="focus-ring px-4 py-2 rounded-full bg-fordham-maroon text-white text-sm font-medium hover:bg-fordham-maroon/90 active:scale-95 transition-all duration-200 ease-spring shadow-sm"
+              className="focus-ring px-4 py-2 rounded-full bg-fordham-maroon text-white text-sm font-medium hover:bg-fordham-maroon/90 active:scale-95 transition-[background-color,opacity,transform] duration-200 ease-spring shadow-sm"
             >
               Continue to chat →
             </button>
@@ -1239,7 +1246,7 @@ export default function AuditChat({
           NOT disabled while loading (ADR 0032): disabling dropped focus every
           turn, and typing-while-streaming is the messenger contract — Enter
           during a stream is simply ignored (sendMessage early-returns). */}
-      <div className="px-3 pb-3 pt-2 border-t border-stone-200/70 dark:border-stone-800 shrink-0 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur-md">
+      <div className="px-3 pb-3 pt-2 border-t border-stone-200/70 dark:border-stone-800 shrink-0 bg-stone-50 dark:bg-stone-900">
         {/* The iMessage composer contract (ADR 0031): a pill field with a
             circular action button anchored at the baseline. items-end keeps
             the circle at the bottom while the textarea grows. */}
@@ -1278,7 +1285,7 @@ export default function AuditChat({
             <button
               onClick={cancelStream}
               aria-label="Stop generating"
-              className="focus-ring shrink-0 w-[34px] h-[34px] rounded-full bg-stone-700 dark:bg-stone-600 text-white hover:bg-stone-800 dark:hover:bg-stone-500 active:scale-90 transition-all duration-200 ease-spring inline-flex items-center justify-center"
+              className="focus-ring shrink-0 w-[34px] h-[34px] rounded-full bg-stone-700 dark:bg-stone-600 text-white hover:bg-stone-800 dark:hover:bg-stone-500 active:scale-90 transition-[background-color,opacity,transform] duration-200 ease-spring inline-flex items-center justify-center"
             >
               <span aria-hidden className="block w-2.5 h-2.5 rounded-[2px] bg-white" />
             </button>
@@ -1287,7 +1294,7 @@ export default function AuditChat({
               onClick={() => sendMessage(input)}
               disabled={showContinueButton || noKeyYet || !input.trim()}
               aria-label="Send message"
-              className="focus-ring shrink-0 w-[34px] h-[34px] rounded-full bg-fordham-maroon text-white disabled:opacity-40 disabled:bg-stone-400 dark:disabled:bg-stone-600 hover:bg-opacity-90 active:scale-90 transition-all duration-200 ease-spring inline-flex items-center justify-center"
+              className="focus-ring shrink-0 w-[34px] h-[34px] rounded-full bg-fordham-maroon text-white disabled:opacity-40 disabled:bg-stone-400 dark:disabled:bg-stone-600 hover:bg-opacity-90 active:scale-90 transition-[background-color,opacity,transform] duration-200 ease-spring inline-flex items-center justify-center"
             >
               {/* Arrow-up glyph, drawn — no icon dependency. */}
               <svg aria-hidden width="16" height="16" viewBox="0 0 16 16" fill="none">
