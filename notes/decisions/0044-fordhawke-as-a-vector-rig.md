@@ -1,6 +1,6 @@
 # 0044 — Fordhawke as a vector rig
 
-- **Status**: Accepted
+- **Status**: Superseded by 0047 (Patch: the drawing wasn't good enough; back to the pixel strips)
 - **Date**: 2026-09-30
 - **Related**: supersedes 0039's sprite playback (the director and bubble rules stay); the pixel pipeline (`tools/mascot/PIPELINE.md`) now serves only the logo and icons
 

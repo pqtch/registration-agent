@@ -736,7 +736,7 @@ export default function Settings() {
           <Segmented label="Theme" options={["light", "system", "dark"]} value={theme} onChange={selectTheme} />
         </Row>
         <Row label="Fordhawke">
-          <Segmented label="Fordhawke size" options={["off", "small", "medium", "large"]} value={mascotSize} onChange={setMascotSize} />
+          <Segmented label="Fordhawke size" options={["off", "normal", "large"]} value={mascotSize} onChange={setMascotSize} />
         </Row>
       </Section>
 

@@ -82,7 +82,7 @@ export default function AuditChat({
   const history = useChatHistory();
   const [mascotSize] = useMascotSize();
   const ramHeight = MASCOT_HEIGHT[mascotSize];
-  const floorMin = ramHeight ? ramHeight + 14 : 24;
+  const floorMin = ramHeight ? Math.round(ramHeight * 0.985) : 24; // his band at rest
   const log = useLogScroll(floorMin);
 
   const [messages, setMessages] = useState<ConversationMessage[]>([]);

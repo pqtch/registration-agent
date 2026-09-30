@@ -77,3 +77,4 @@ For a narrative pass through the whole decision arc, read them in numerical orde
 | [0044](./0044-fordhawke-as-a-vector-rig.md) | Fordhawke as a vector rig: parts on transforms, a size setting, the bubble anchored to his head · Supersedes 0039 playback | Accepted | 2026-09-30 |
 | [0045](./0045-fordham-knowledge-comes-from-fordham-edu.md) | Fordham knowledge comes from fordham.edu, cited: an order of authority, web search locked to fordham.edu, sources under the answer · Extends 0024 | Accepted | 2026-09-30 |
 | [0046](./0046-ahead-the-roadmap-past-this-term.md) | Ahead: the roadmap past this term, placed by the student and read by the advisor; offering history deferred · Extends 0040/0042 | Accepted | 2026-09-30 |
+| [0047](./0047-back-to-the-pixel-ram.md) | Back to the pixel ram: strips again, sizes at 1x/2x only, bubble still on his head · Supersedes 0044 | Accepted | 2026-09-30 |
