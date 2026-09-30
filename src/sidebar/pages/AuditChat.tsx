@@ -22,7 +22,7 @@ import {
   type MascotState,
 } from "../components/Mascot";
 import { useMascotDirector } from "../useMascotDirector";
-import type { Beat } from "../mascotDirector";
+import { bubblePhrase, type Beat } from "../mascotDirector";
 
 const SUGGESTIONS = [
   "What do I still need to graduate?",
@@ -207,15 +207,15 @@ export default function AuditChat({
   })();
 
   // The director gives each pose a real beat — a min-hold + a coalesced queue —
-  // so a one-second what-if actually plays out instead of blinking past. Pose
-  // AND phrase both read off its DISPLAYED beat, so the bubble never claims
-  // something the ram isn't doing. Reduced motion bypasses the holds entirely.
+  // so a one-second what-if actually plays out instead of blinking past. The
+  // pose reads off its DISPLAYED beat; the bubble speaks only when that beat
+  // is still true (bubblePhrase), so it never claims something the ram isn't
+  // doing, nor work that has already finished. Reduced motion bypasses the
+  // holds entirely.
   const reducedMotion = usePrefersReducedMotion();
   const displayedBeat = useMascotDirector(desiredBeat, loading, reducedMotion);
   const mascotActivity: MascotState | null = displayedBeat?.pose ?? null;
-  const statusPhrase: string | null = displayedBeat
-    ? displayedBeat.toolPhrase ?? thinkingPhrase
-    : null;
+  const statusPhrase = bubblePhrase(displayedBeat, desiredBeat, thinkingPhrase);
 
   const greetingIndexRef = useRef(Math.floor(Math.random() * GREETINGS.length));
   const greeting = useMemo(

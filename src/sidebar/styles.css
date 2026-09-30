@@ -241,7 +241,13 @@ body {
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    /* 0s, not 0.01ms. transition-property defaults to `all`, so a non-zero
+       duration here turns every style write on every element into a
+       transition that lands a frame later. The chat's pin-to-top grows the
+       floor and scrolls in the same tick, so the scroll clamped short and the
+       new turn never pinned (reduced-motion render, 2026-09-30). Nothing
+       listens for transitionend, so no event is lost. */
+    transition-duration: 0s !important;
     scroll-behavior: auto !important;
   }
 }

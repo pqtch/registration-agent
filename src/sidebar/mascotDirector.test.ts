@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  bubblePhrase,
   directorReducer,
   initialDirectorState,
   MIN_HOLD_MS,
@@ -69,5 +70,28 @@ describe("mascot movement director", () => {
     const s = directorReducer(backlog, { type: "end" });
     expect(s.displayed).toEqual(whatif); // current beat still finishes
     expect(s.queue).toEqual([reading]); // backlog collapsed to the latest
+  });
+});
+
+describe("thought-bubble phrase", () => {
+  it("names a tool only while that tool is in flight", () => {
+    expect(bubblePhrase(whatif, whatif, "Pondering")).toBe("Running a what-if audit");
+  });
+  it("goes quiet when a held pose outlives its tool", () => {
+    // the what-if pose is still held, but the model moved on to thinking
+    expect(bubblePhrase(whatif, ponder, "Pondering")).toBeNull();
+    // or to another tool
+    expect(bubblePhrase(whatif, reading, "Pondering")).toBeNull();
+  });
+  it("goes quiet once the answer streams, whatever pose is draining", () => {
+    expect(bubblePhrase(whatif, null, "Pondering")).toBeNull();
+    expect(bubblePhrase(ponder, null, "Pondering")).toBeNull();
+  });
+  it("thinks aloud while anything is still pending", () => {
+    expect(bubblePhrase(ponder, ponder, "Pondering")).toBe("Pondering");
+    expect(bubblePhrase(ponder, whatif, "Pondering")).toBe("Pondering");
+  });
+  it("says nothing with no pose", () => {
+    expect(bubblePhrase(null, whatif, "Pondering")).toBeNull();
   });
 });

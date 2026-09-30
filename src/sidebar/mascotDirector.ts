@@ -43,6 +43,23 @@ export function sameBeat(a: Beat | null, b: Beat | null): boolean {
   return a.pose === b.pose && a.toolPhrase === b.toolPhrase;
 }
 
+// What the thought bubble may say. The director holds a POSE past its tool so
+// a one-second what-if still plays out, but the bubble's words are a claim
+// about the app, so they must be true now: a tool phrase only while that
+// tool is still in flight (`desired`), the thinking phrase only while
+// something is still pending, and nothing once the answer streams (the
+// growing answer is its own indicator). Before this, a held what-if said
+// "Running a what-if audit…" under a citation already marked DONE.
+export function bubblePhrase(
+  displayed: Beat | null,
+  desired: Beat | null,
+  thinkingPhrase: string
+): string | null {
+  if (!displayed || !desired) return null;
+  if (displayed.toolPhrase === null) return thinkingPhrase;
+  return sameBeat(displayed, desired) ? displayed.toolPhrase : null;
+}
+
 // The tail of the pipeline: the last beat that will play (queued if any,
 // otherwise the one on screen). Coalescing compares against this.
 const tailOf = (s: DirectorState): Beat | null =>

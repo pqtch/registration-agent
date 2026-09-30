@@ -608,7 +608,7 @@ export default function Settings() {
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => startMemoryEdit(m)}
-                      className="focus-ring rounded px-1 text-xs text-stone-600 dark:text-stone-400 hover:text-fordham-maroon dark:hover:text-fordham-maroon-ink"
+                      className="focus-ring rounded inline-flex items-center justify-center min-w-6 min-h-6 text-xs text-stone-600 dark:text-stone-400 hover:text-fordham-maroon dark:hover:text-fordham-maroon-ink"
                       aria-label={`Edit memory: ${m.description}`}
                       title="Edit"
                     >
@@ -616,7 +616,7 @@ export default function Settings() {
                     </button>
                     <button
                       onClick={() => deleteMemoryEntry(m.id)}
-                      className="focus-ring rounded px-1 text-xs text-stone-600 dark:text-stone-400 hover:text-red-700 dark:hover:text-red-400"
+                      className="focus-ring rounded inline-flex items-center justify-center min-w-6 min-h-6 text-xs text-stone-600 dark:text-stone-400 hover:text-red-700 dark:hover:text-red-400"
                       aria-label={`Delete memory: ${m.description}`}
                       title="Delete"
                     >
