@@ -81,6 +81,7 @@ function attributesFromBanner(bsec: BannerSection): SectionAttribute[] {
 function sectionFromBanner(bsec: BannerSection): Section {
   return {
     crn: bsec.courseReferenceNumber,
+    section: bsec.sequenceNumber,
     instructor: primaryInstructor(bsec),
     seatsAvailable: bsec.seatsAvailable,
     campus: bsec.campusDescription ?? "",

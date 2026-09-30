@@ -10,6 +10,7 @@ export interface GridItem {
   id: string; // CRN
   label: string; // course code, e.g. "ENGL 3014"
   meetings: MeetingTime[];
+  registered?: boolean; // already registered (audit), not a planned add
 }
 
 export interface GridConflict {
@@ -23,6 +24,7 @@ export interface GridConflict {
 export interface GridBlock {
   id: string;
   label: string;
+  registered?: boolean;
   day: Day;
   start: number; // minutes from midnight
   end: number;
@@ -66,7 +68,7 @@ export function layoutWeek(items: GridItem[], conflicts: GridConflict[] = []): W
       const end = toMinutes(m.endTime);
       if (start === null || end === null || end <= start) continue;
       timed = true;
-      for (const day of m.days) raw.push({ id: item.id, label: item.label, day, start, end });
+      for (const day of m.days) raw.push({ id: item.id, label: item.label, registered: item.registered, day, start, end });
     }
     if (!timed) unscheduled.push(item.id);
   }

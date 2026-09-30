@@ -10,6 +10,7 @@
 // already in progress this term (inProgressIncomplete) isn't open: there is
 // nothing left to plan for it.
 import type { AuditResponse, AuditRule } from "../../shared/degreeworks-types";
+import type { CourseOption, RegisteredClass } from "../../shared/requirements";
 import { ruleStatus } from "./degreeworks-audit-to-text";
 
 export interface AuditSummary {
@@ -21,8 +22,9 @@ export interface AuditSummary {
     id: string;
     title: string;
     percentComplete: number;
-    open: { id: string; label: string }[];
+    open: { id: string; label: string; options: CourseOption[] }[];
   }[];
+  registered: RegisteredClass[]; // in progress or registered, every term the audit lists
 }
 
 const num = (v: string | undefined | null): number | null => {
@@ -35,6 +37,34 @@ function isOpen(rule: AuditRule): boolean {
   if (rule.ruleType === "Block" || rule.ruleType === "Blocktype") return false; // points at another block
   if (!rule.label?.trim()) return false;
   return ruleStatus(rule) !== "x" && rule.inProgressIncomplete !== "Yes";
+}
+
+// What a rule accepts. A Course rule lists its matchers; a group or subset rule
+// accepts whatever its still-open children accept.
+function optionsOf(rule: AuditRule): CourseOption[] {
+  if (rule.ruleType !== "Course") return (rule.ruleArray ?? []).filter(isOpen).flatMap(optionsOf);
+  return (rule.requirement?.courseArray ?? []).map((c) => ({
+    subject: c.discipline,
+    number: c.number,
+    ...(c.numberEnd ? { numberEnd: c.numberEnd } : {}),
+    attributes: (c.withArray ?? [])
+      .filter((w) => w.code === "ATTRIBUTE" && w.operator === "=")
+      .flatMap((w) => w.valueList),
+  }));
+}
+
+function registeredOf(audit: AuditResponse): RegisteredClass[] {
+  return (audit.classInformation?.classArray ?? [])
+    .filter((c) => c.inProgress === "Y" || c.preregistered === "Y")
+    .map((c) => ({
+      term: c.term,
+      subject: c.discipline,
+      number: c.number,
+      section: c.section ?? "",
+      title: c.courseTitle ?? "",
+      credits: num(c.credits) ?? 0,
+      status: c.preregistered === "Y" ? "registered" : "in-progress",
+    }));
 }
 
 export function auditToSummary(audit: AuditResponse): AuditSummary {
@@ -59,7 +89,10 @@ export function auditToSummary(audit: AuditResponse): AuditSummary {
         id: b.requirementId || b.title,
         title: (b.title || b.requirementType).trim(),
         percentComplete: num(b.percentComplete) ?? 0,
-        open: (b.ruleArray ?? []).filter(isOpen).map((r) => ({ id: r.ruleId || r.label, label: r.label.trim() })),
+        open: (b.ruleArray ?? [])
+          .filter(isOpen)
+          .map((r) => ({ id: r.ruleId || r.label, label: r.label.trim(), options: optionsOf(r) })),
       })),
+    registered: registeredOf(audit),
   };
 }

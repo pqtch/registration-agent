@@ -95,6 +95,8 @@ export default function WeekGrid({
             className={`absolute overflow-hidden rounded-[4px] ${b.lanes > 1 ? "px-0.5" : "px-1"} py-0.5 text-[10px] font-semibold leading-tight tabular-nums ring-1 ring-inset ${
               b.clash
                 ? "bg-red-600/10 text-red-700 ring-red-600/35 dark:bg-red-400/15 dark:text-red-300 dark:ring-red-400/40"
+                : b.registered
+                ? "bg-ink/[0.07] text-ink-2 ring-line-2"
                 : "bg-fordham-maroon/[0.08] text-fordham-maroon ring-fordham-maroon/20 dark:bg-fordham-maroon-ink/15 dark:text-fordham-maroon-ink dark:ring-fordham-maroon-ink/25"
             }`}
             style={{

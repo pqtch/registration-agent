@@ -4,7 +4,6 @@ import {
   addSection,
   crns,
   findConflicts,
-  planEmail,
   planPromptText,
   removeSection,
   termLabel,
@@ -84,29 +83,6 @@ describe("termLabel", () => {
   });
 });
 
-describe("planEmail", () => {
-  it("says only what the plan holds", () => {
-    const e = planEmail([sec("40001", "ENGL 3014", [[["T", "F"], "13:00", "14:15"]])], {
-      firstName: "Ava",
-      termLabel: "Fall 2026",
-    });
-    expect(e.subject).toBe("Course plan for Fall 2026");
-    expect(e.body).toBe(
-      [
-        "Hi,",
-        "",
-        "Here's the plan I'm considering for Fall 2026:",
-        "",
-        "ENGL 3014 ENGL 3014 title — CRN 40001 — TF 13:00–14:15 — 3 cr",
-        "",
-        "Total: 3 credits",
-        "",
-        "Thanks,",
-        "Ava",
-      ].join("\n"),
-    );
-  });
-});
 
 describe("planPromptText", () => {
   it("lists kept sections, total and overlaps for the advisor", () => {
@@ -114,7 +90,7 @@ describe("planPromptText", () => {
       [sec("2", "COMM 3233", [[["T"], "14:30", "17:15"]]), sec("1", "ENGL 3014", [[["T", "F"], "13:00", "14:45"]])],
       "Fall 2026",
     );
-    expect(text).toContain("kept for Fall 2026");
+    expect(text).toContain("plans to add for Fall 2026");
     expect(text).toContain("- ENGL 3014 ENGL 3014 title — CRN 1 — TF 13:00–14:45 — 3 cr");
     expect(text).toContain("Total: 6 credits.");
     expect(text).toContain("Overlaps: ENGL 3014 and COMM 3233 on T 14:30–14:45.");

@@ -71,8 +71,8 @@ const SUMMARY: AuditSummary = {
       title: "Core Curriculum",
       percentComplete: 88,
       open: [
-        { id: "1-7", label: "Eloquentia Perfecta 3" },
-        { id: "1-9", label: "Pluralism in the U.S." },
+        { id: "1-7", label: "Eloquentia Perfecta 3", options: [{ subject: "@", number: "@", attributes: ["EP3"] }] },
+        { id: "1-9", label: "Pluralism in the U.S.", options: [{ subject: "@", number: "@", attributes: ["PLUR"] }] },
       ],
     },
     {
@@ -80,10 +80,18 @@ const SUMMARY: AuditSummary = {
       title: "Major in Computer Science",
       percentComplete: 75,
       open: [
-        { id: "2-4", label: "Upper-level CISC elective" },
-        { id: "2-6", label: "Senior capstone" },
+        { id: "2-4", label: "Upper-level CISC elective", options: [{ subject: "CISC", number: "4@", attributes: [] }] },
+        { id: "2-6", label: "Senior capstone", options: [{ subject: "CISC", number: "4999", attributes: [] }] },
       ],
     },
+  ],
+  // Already registered for Spring 2027. ARHI 1101 has no section in the audit,
+  // and two in the catalog, so the Plan asks which one (never guesses).
+  registered: [
+    { term: "202720", subject: "CISC", number: "3500", section: "R01", title: "Database Systems", credits: 4, status: "registered" },
+    { term: "202720", subject: "MATH", number: "2006", section: "R02", title: "Discrete Mathematics", credits: 4, status: "registered" },
+    { term: "202720", subject: "ARHI", number: "1101", section: "", title: "Art History Survey", credits: 3, status: "registered" },
+    { term: "202710", subject: "CISC", number: "3400", section: "R01", title: "Operating Systems", credits: 4, status: "in-progress" },
   ],
 };
 
@@ -131,8 +139,9 @@ const PLAN_CONFLICT: PlannedSection[] = [
 
 const LOCAL_READY = {
   anthropicApiKey: "sk-ant-dev-mock",
-  catalogTerm: "202710",
-  catalogTermLabel: "Fall 2026",
+  catalogTerm: "202720",
+  catalogTermLabel: "Spring 2027",
+  catalogUpdatedAt: 1790778840000,
   auditSummary: SUMMARY,
   catalogCourseCount: 3247,
   studentFirstName: "Ava",
@@ -174,6 +183,7 @@ const MEMORIES = [
 ];
 
 const TERMS = [
+  { code: "202720", description: "Spring 2027" },
   { code: "202710", description: "Fall 2026" },
   { code: "202630", description: "Summer 2026" },
   { code: "202620", description: "Spring 2026" },
@@ -387,8 +397,8 @@ const SCENARIOS: Record<string, Scenario> = {
     ...READY_BASE,
     onLoad: [{ delay: 300, msg: { type: "PROFILE_LOADING" } }],
   },
-  plan: { ...READY_BASE, local: { ...LOCAL_READY, "plan:202710": PLAN }, page: "plan" },
-  "plan-conflict": { ...READY_BASE, local: { ...LOCAL_READY, "plan:202710": PLAN_CONFLICT }, page: "plan" },
+  plan: { ...READY_BASE, local: { ...LOCAL_READY, "plan:202720": PLAN }, page: "plan" },
+  "plan-conflict": { ...READY_BASE, local: { ...LOCAL_READY, "plan:202720": PLAN_CONFLICT }, page: "plan" },
   "plan-empty": { ...READY_BASE, page: "plan" },
 };
 
@@ -448,6 +458,14 @@ export function installChromeMock(): void {
         removeListener: (l: never) => storageListeners.delete(l),
       },
     },
+    // Opening a tab in the harness records the URL instead of leaving the page,
+    // so the Gmail draft link can be inspected (window.__RAMPLAN_OPENED).
+    tabs: {
+      create({ url }: { url: string }) {
+        const w = globalThis as { __RAMPLAN_OPENED?: string[] };
+        (w.__RAMPLAN_OPENED ??= []).push(url);
+      },
+    },
     runtime: {
       onMessage: {
         addListener: (l: Listener) => listeners.add(l),
@@ -472,7 +490,7 @@ export function installChromeMock(): void {
             const count = (scenario.local as { catalogCourseCount?: number }).catalogCourseCount ?? 0;
             return reply(
               count > 0
-                ? { term: "202710", courseCount: count, updatedAt: 1751980000000 }
+                ? { term: "202720", courseCount: count, updatedAt: 1751980000000 }
                 : { term: null, courseCount: 0, updatedAt: null }
             );
           }
@@ -483,7 +501,7 @@ export function installChromeMock(): void {
             // Canned catalog fetch so the FirstRun step-3 button (ADR 0032)
             // is drivable in the harness: five progress ticks, then READY +
             // the storage write that flips hasCatalog in the parent.
-            const term = (msg as { term?: string }).term ?? "202710";
+            const term = (msg as { term?: string }).term ?? "202720";
             const script: Broadcast[] = [];
             for (let i = 1; i <= 5; i++) {
               script.push({
@@ -526,8 +544,8 @@ export function installChromeMock(): void {
   );
   // Scenarios that open on another tab say so through the same ?page= the app
   // already reads, so the shipped App carries no harness hook.
-  if (scenario.page && scenario.page !== "chat" && !params.get("page")) {
-    params.set("page", scenario.page);
+  if (!params.get("page")) {
+    params.set("page", scenario.page ?? "chat");
     history.replaceState(null, "", `${location.pathname}?${params}`);
   }
   if (scenario.onLoad) play(scenario.onLoad);

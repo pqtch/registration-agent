@@ -18,6 +18,7 @@ export interface Course {
 
 export interface Section {
   crn: string;
+  section?: string; // Banner sequence number, e.g. "L01" (absent in catalogs loaded before 2026-09-30)
   instructor: string;
   seatsAvailable: number;
   campus: string;

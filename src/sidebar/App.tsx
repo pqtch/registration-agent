@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, type ReactNode } from "react";
 import AuditChat from "./pages/AuditChat";
 import Settings from "./pages/Settings";
 import PlanView from "./pages/PlanView";
-import { usePlan } from "./usePlan";
+import { useSchedule } from "./useSchedule";
 import logoUrl from "../../tools/mascot/assets/logo-header.png";
 import logoDarkUrl from "../../tools/mascot/assets/logo-header-dark.png";
 import {
@@ -22,7 +22,7 @@ type Page = "chat" | "plan" | "settings";
 // no query); the dev harness sets it for scenarios that open on Plan.
 function initialPage(): Page {
   const p = new URLSearchParams(window.location.search).get("page");
-  return p === "settings" || p === "plan" ? p : "chat";
+  return p === "settings" || p === "chat" ? p : "plan";
 }
 
 export default function App() {
@@ -30,7 +30,7 @@ export default function App() {
   // URL carries no query) but lets the dev harness screenshot Settings
   // without scripting a click.
   const [page, setPage] = useState<Page>(initialPage);
-  const plan = usePlan();
+  const plan = useSchedule();
   // "Ask the advisor" from another view: switch to the Advisor, hand it the
   // text, and let AuditChat send it as a normal turn when it's ready.
   const [pendingAsk, setPendingAsk] = useState<{ id: number; text: string } | null>(null);
@@ -105,9 +105,6 @@ export default function App() {
           className="flex rounded-lg bg-sunk p-0.5"
           aria-label="Pages"
         >
-          <NavButton active={page === "chat"} onClick={() => setPage("chat")}>
-            Advisor
-          </NavButton>
           <NavButton active={page === "plan"} onClick={() => setPage("plan")}>
             Plan
             {plan.sections.length > 0 && (
@@ -125,6 +122,9 @@ export default function App() {
                 </span>
               </>
             )}
+          </NavButton>
+          <NavButton active={page === "chat"} onClick={() => setPage("chat")}>
+            Advisor
           </NavButton>
           <NavButton active={page === "settings"} onClick={() => setPage("settings")}>
             Settings
@@ -152,7 +152,7 @@ export default function App() {
           className="absolute inset-0 animate-page-in"
           style={{ display: page === "plan" ? "block" : "none" }}
         >
-          <PlanView onAsk={askAdvisor} onOpenSettings={() => setPage("settings")} />
+          <PlanView onAsk={askAdvisor} />
         </div>
         <div
           className="absolute inset-0 animate-page-in"

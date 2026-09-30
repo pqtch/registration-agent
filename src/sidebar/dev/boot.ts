@@ -2,9 +2,10 @@
 // evaluates (main.tsx calls chrome.storage at module scope via
 // loadThemePreference). Dynamic import guarantees the ordering.
 import { installChromeMock } from "./chrome-mock";
+import { seedMockCatalog } from "./catalog-mock";
 
 installChromeMock();
-import("../main").then(maybeAutosend);
+seedMockCatalog().then(() => import("../main")).then(maybeAutosend);
 
 // ─── Autosend (dev harness only) ──────────────────────────────────────────────
 // Some scenarios (error, toolcap) only reveal their UI in response to a *sent*

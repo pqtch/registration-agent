@@ -9,7 +9,7 @@
 import { useMemo } from "react";
 import type { PanelCourse, PanelSection } from "../../shared/types";
 import { findConflicts, type PlannedSection } from "../../shared/plan";
-import { usePlan } from "../usePlan";
+import { useSchedule } from "../useSchedule";
 import { meetingsLabel } from "../meetingFormat";
 
 export function toPlanned(c: PanelCourse, s: PanelSection): PlannedSection {
@@ -28,7 +28,7 @@ export function toPlanned(c: PanelCourse, s: PanelSection): PlannedSection {
 }
 
 export default function SectionResults({ courses }: { courses: PanelCourse[] }) {
-  const { term, sections: plan, add, remove } = usePlan();
+  const { term, sections: plan, busy, add, remove } = useSchedule();
   const rows = useMemo(
     () => courses.flatMap((c) => c.sections.map((s) => ({ c, s }))),
     [courses]
@@ -48,11 +48,12 @@ export default function SectionResults({ courses }: { courses: PanelCourse[] }) 
       <ul className="mt-2 card divide-y divide-line overflow-hidden">
         {rows.map(({ c, s }) => {
           const isKept = kept.has(s.crn);
+          // Checked against the whole week: registered classes and the plan.
           const overlaps = isKept
             ? []
-            : findConflicts([...plan, toPlanned(c, s)]).filter((x) => x.a === s.crn || x.b === s.crn);
+            : findConflicts([...busy, { crn: s.crn, meetings: s.meetings }]).filter((x) => x.a === s.crn || x.b === s.crn);
           const overlapWith = overlaps
-            .map((x) => plan.find((p) => p.crn === (x.a === s.crn ? x.b : x.a))?.courseCode)
+            .map((x) => busy.find((b) => b.crn === (x.a === s.crn ? x.b : x.a))?.courseCode)
             .filter(Boolean);
           return (
             <li key={s.crn} className="flex items-start gap-2 px-3 py-2.5">
@@ -71,7 +72,7 @@ export default function SectionResults({ courses }: { courses: PanelCourse[] }) 
                 </p>
                 {overlapWith.length > 0 && (
                   <p className="mt-0.5 text-xs font-medium text-red-700 dark:text-red-400">
-                    Overlaps {overlapWith.join(" and ")} in your plan
+                    Overlaps {overlapWith.join(" and ")} in your week
                   </p>
                 )}
               </div>

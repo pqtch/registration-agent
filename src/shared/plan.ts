@@ -2,7 +2,8 @@
 // rules about them that are facts, not judgement: overlaps, credits, CRNs.
 // Pure functions; storage is the caller's (usePlan, chrome.storage.local under
 // `plan:<termCode>`). No model is involved in any of this.
-import type { Day, MeetingTime, PanelSection, SectionAttribute } from "./types";
+import type { RegisteredClass } from "./requirements";
+import type { Course, Day, MeetingTime, PanelSection, Section, SectionAttribute } from "./types";
 
 export interface PlannedSection {
   crn: string;
@@ -30,6 +31,21 @@ export interface Conflict {
 
 export const planKey = (term: string) => `plan:${term}`;
 
+export function plannedFrom(c: Course, s: Section): PlannedSection {
+  return {
+    crn: s.crn,
+    courseCode: c.courseCode,
+    title: c.title,
+    credits: c.credits,
+    instructor: s.instructor,
+    seats: s.seatsAvailable,
+    mode: s.deliveryMode,
+    meetings: s.meetings,
+    attributes: s.attributes,
+    addedAt: Date.now(),
+  };
+}
+
 function minutes(hhmm: string): number | null {
   const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
@@ -39,7 +55,7 @@ const hhmm = (min: number) =>
 
 type Slot = { crn: string; day: Day; start: number; end: number };
 
-function slots(s: PlannedSection): Slot[] {
+function slots(s: Pick<PlannedSection, "crn" | "meetings">): Slot[] {
   return s.meetings.flatMap((m) => {
     const start = minutes(m.startTime);
     const end = minutes(m.endTime);
@@ -48,7 +64,7 @@ function slots(s: PlannedSection): Slot[] {
   });
 }
 
-export function findConflicts(sections: PlannedSection[]): Conflict[] {
+export function findConflicts(sections: Pick<PlannedSection, "crn" | "meetings">[]): Conflict[] {
   const all = sections.flatMap(slots);
   const seen = new Map<string, Conflict>();
   for (let i = 0; i < all.length; i++) {
@@ -130,35 +146,26 @@ function meetingSummary(s: PlannedSection): string {
   return timed.map((m) => `${DAY_CODE_ORDER(m.days)} ${m.startTime}–${m.endTime}`).join("; ");
 }
 
-// The plan as a plain-text email to the advisor. Only what the plan holds:
-// no invented recommendations, no status the student didn't set.
-export function planEmail(
-  sections: PlannedSection[],
-  opts: { firstName: string | null; termLabel: string }
-): { subject: string; body: string } {
-  const lines = ordered(sections).map(
-    (s) => `${s.courseCode} ${s.title} — CRN ${s.crn} — ${meetingSummary(s)} — ${s.credits} cr`
-  );
-  const body = [
-    "Hi,",
-    "",
-    `Here's the plan I'm considering for ${opts.termLabel}:`,
-    "",
-    ...lines,
-    "",
-    `Total: ${totalCredits(sections)} credits`,
-    "",
-    "Thanks,",
-    ...(opts.firstName ? [opts.firstName] : []),
-  ].join("\n");
-  return { subject: `Course plan for ${opts.termLabel}`, body };
-}
 
 // The plan as the advisor reads it (volatile prompt block, ADR 0020/0040), so
 // "does this fit my plan?" is answered against what the student actually kept.
-export function planPromptText(sections: PlannedSection[], termLabel: string): string {
+export function planPromptText(
+  sections: PlannedSection[],
+  termLabel: string,
+  registered: RegisteredClass[] = []
+): string {
+  const reg = registered.length
+    ? [
+        `Already registered for ${termLabel}, per the audit (any new section must fit around these):`,
+        ...registered.map((c) => `- ${c.subject} ${c.number}${c.section ? ` ${c.section}` : ""} ${c.title} — ${c.credits} cr`),
+        "",
+      ]
+    : [];
   if (!sections.length) {
-    return `Nothing kept for ${termLabel} yet. The student keeps sections by tapping Add on the section cards under your catalog searches; they then appear in the Plan tab.`;
+    return [
+      ...reg,
+      `Nothing planned to add for ${termLabel} yet. The student adds sections from the Plan tab's Still needed list, or by tapping Add on the section cards under your catalog searches.`,
+    ].join("\n");
   }
   const lines = ordered(sections).map(
     (s) => `- ${s.courseCode} ${s.title} — CRN ${s.crn} — ${meetingSummary(s)} — ${s.credits} cr`
@@ -168,7 +175,8 @@ export function planPromptText(sections: PlannedSection[], termLabel: string): s
     return `${code(c.a)} and ${code(c.b)} on ${c.day} ${c.start}–${c.end}`;
   });
   return [
-    `Sections the student has kept for ${termLabel} (a working plan, not a registration):`,
+    ...reg,
+    `Sections the student plans to add for ${termLabel} (a working plan, not a registration):`,
     ...lines,
     `Total: ${totalCredits(sections)} credits.`,
     overlaps.length ? `Overlaps: ${overlaps.join("; ")}.` : "No overlaps.",
