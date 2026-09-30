@@ -11,6 +11,7 @@ import {
   saveThemePreference,
   type ThemePreference,
 } from "../theme";
+import { useMascotSize } from "../components/Mascot";
 
 interface BannerTerm {
   code: string;
@@ -73,6 +74,7 @@ export default function Settings() {
 
   // Theme preference: light / dark / system (default).
   const [theme, setTheme] = useState<ThemePreference>("system");
+  const [mascotSize, setMascotSize] = useMascotSize();
 
   // [NAME]/[ADVISOR]/[ADVISOR_EMAIL] render-time substitution for the
   // profile card (ADR 0032; Patch-approved). Same storage keys the chat
@@ -815,35 +817,13 @@ export default function Settings() {
         )}
       </Section>
 
-      {/* Appearance */}
-      <Section
-        label="Appearance"
-        footer="System follows your operating-system dark-mode setting."
-      >
-        {/* Same segmented-control grammar as the header nav. */}
-        <div className="px-4 py-2.5">
-          <div
-            role="radiogroup"
-            aria-label="Theme"
-            className="flex rounded-lg bg-sunk p-0.5"
-          >
-            {(["light", "system", "dark"] as const).map((option) => (
-              <button
-                key={option}
-                role="radio"
-                aria-checked={theme === option}
-                onClick={() => selectTheme(option)}
-                className={`focus-ring flex-1 rounded-md text-xs font-medium py-1.5 capitalize transition-[background-color,color,box-shadow,transform] duration-200 ease-spring active:scale-95 ${
-                  theme === option
-                    ? "bg-raised text-ink shadow-sm"
-                    : "text-ink-2 hover:text-ink"
-                }`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </div>
+      <Section label="Appearance" footer="System follows your operating-system dark-mode setting.">
+        <Row label="Theme">
+          <Segmented label="Theme" options={["light", "system", "dark"]} value={theme} onChange={selectTheme} />
+        </Row>
+        <Row label="Fordhawke">
+          <Segmented label="Fordhawke size" options={["off", "small", "medium", "large"]} value={mascotSize} onChange={setMascotSize} />
+        </Row>
       </Section>
 
       {/* About — footer-only, like the fine print at the bottom of an iOS
@@ -854,6 +834,46 @@ export default function Settings() {
         All data is stored locally in your browser.
       </p>
 
+    </div>
+  );
+}
+
+function Row({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5">
+      <span className="w-20 shrink-0 text-sm text-ink">{label}</span>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
+
+// The header nav's segmented-control grammar, as a radio group.
+function Segmented<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: readonly T[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className="flex rounded-lg bg-sunk p-0.5">
+      {options.map((o) => (
+        <button
+          key={o}
+          role="radio"
+          aria-checked={value === o}
+          onClick={() => onChange(o)}
+          className={`focus-ring flex-1 rounded-md py-1.5 text-xs font-medium capitalize transition-[background-color,color,box-shadow,transform] duration-200 ease-spring active:scale-95 ${
+            value === o ? "bg-raised text-ink shadow-lift" : "text-ink-2 hover:text-ink"
+          }`}
+        >
+          {o}
+        </button>
+      ))}
     </div>
   );
 }

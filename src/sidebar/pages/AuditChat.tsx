@@ -16,11 +16,11 @@ import { describeTurnError } from "../errorCopy";
 import { useAuditSummary } from "../useAuditSummary";
 import WhereYouStand from "../components/WhereYouStand";
 import FirstRun, { DEGREEWORKS_URL } from "../components/FirstRun";
-import { ResidentMascot, usePrefersReducedMotion, type MascotState } from "../components/Mascot";
+import { ResidentMascot, usePrefersReducedMotion, useMascotSize, MASCOT_HEIGHT, type MascotState } from "../components/Mascot";
 import { useMascotDirector } from "../useMascotDirector";
 import { bubblePhrase, type Beat } from "../mascotDirector";
 import { usePacedStream } from "../usePacedStream";
-import { useLogScroll, FLOOR_MIN } from "../useLogScroll";
+import { useLogScroll } from "../useLogScroll";
 import { useChatHistory, type SavedChat } from "../chatHistory";
 
 const SUGGESTIONS = [
@@ -79,7 +79,10 @@ export default function AuditChat({
 }) {
   const auditSummary = useAuditSummary();
   const history = useChatHistory();
-  const log = useLogScroll();
+  const [mascotSize] = useMascotSize();
+  const ramHeight = MASCOT_HEIGHT[mascotSize];
+  const floorMin = ramHeight ? ramHeight + 14 : 24;
+  const log = useLogScroll(floorMin);
 
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [input, setInput] = useState("");
@@ -622,7 +625,7 @@ export default function AuditChat({
         </div>
       ) : null}
 
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative flex-1 overflow-hidden" style={{ "--ram": `${ramHeight}px` } as React.CSSProperties}>
         {historyOpen && (
           <ChatHistory chats={history.chats} activeId={history.activeId} onOpen={openChat} onDelete={deleteChat} onClose={closeHistory} />
         )}
@@ -638,14 +641,18 @@ export default function AuditChat({
         )}
         {/* The resident holds the corner over the log, not in it. He fades while
             the student reads back up the history, and so does his bubble. */}
-        <ResidentMascot activity={mascotActivity} className={`mascot-resident transition-opacity duration-300 ${log.isAtBottom ? "opacity-100" : "opacity-0"}`} />
+        <ResidentMascot activity={mascotActivity} height={ramHeight} className={`mascot-resident transition-opacity duration-300 ${log.isAtBottom ? "opacity-100" : "opacity-0"}`} />
         {statusPhrase && (
-          <div aria-hidden className={`thought-bubble animate-msg-in transition-opacity duration-300 ${log.isAtBottom ? "opacity-100" : "opacity-0"}`}>
-            <div className="rounded-2xl rounded-br-md bg-raised px-3 py-1.5 shadow-lift">
+          <div aria-hidden className={`thought-bubble${ramHeight ? "" : " thought-bubble--solo"} animate-msg-in transition-opacity duration-300 ${log.isAtBottom ? "opacity-100" : "opacity-0"}`}>
+            <div className="rounded-2xl rounded-br-md bg-raised px-3 py-1.5 shadow-lift dark:bg-[rgb(52_48_45)]">
               <p className="shimmer-text text-[13px] italic leading-snug">{statusPhrase}…</p>
             </div>
-            <span className="thought-dot thought-dot--1 bg-raised shadow-lift" />
-            <span className="thought-dot thought-dot--2 bg-raised shadow-lift" />
+            {ramHeight > 0 && (
+              <>
+                <span className="thought-dot thought-dot--1 bg-raised shadow-lift dark:bg-[rgb(52_48_45)]" />
+                <span className="thought-dot thought-dot--2 bg-raised shadow-lift dark:bg-[rgb(52_48_45)]" />
+              </>
+            )}
           </div>
         )}
         {statusPhrase && <span className="sr-only">Advisor is thinking</span>}
@@ -742,7 +749,7 @@ export default function AuditChat({
               </div>
             )}
           </div>
-          <div ref={log.floorRef} aria-hidden className="shrink-0" style={{ height: FLOOR_MIN }} />
+          <div ref={log.floorRef} aria-hidden className="shrink-0" style={{ height: floorMin }} />
           <div ref={log.bottomRef} />
         </div>
       </div>

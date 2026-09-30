@@ -1,5 +1,8 @@
 # Fordhawke mascot sprite pipeline
 
+> **2026-09-30: the panel mascot is now a vector rig** (`src/sidebar/components/Fordhawke.tsx`,
+> ADR 0044). This pipeline still makes the logo and icons; the strips below no longer ship.
+
 State as of 2026-07-13. Canon + process for generating the RamPlan panel mascot.
 
 ## Canon

@@ -164,85 +164,32 @@ body {
   }
 }
 
-/* Fordhawke sprite sheet (see components/Mascot.tsx). A state is a horizontal
-   strip of uniform --cell squares; the animation steps background-position-x
-   one whole cell per frame with steps(N), so each frame lands exactly on a
-   cell boundary. --sprite (the hashed asset URL) and --cell (render size) come
-   in as inline custom properties; --frames and the per-state duration/step
-   count live on the state classes below. background-size locks height to the
-   cell and lets width scale proportionally, so one keyframe serves every size.
-   pixelated is non-negotiable — these are true pixel art. */
-.mascot {
-  display: inline-block;
-  width: var(--cell);
-  height: var(--cell);
-  background-image: var(--sprite);
-  background-repeat: no-repeat;
-  background-position: 0 0;
-  background-size: auto var(--cell);
-  image-rendering: pixelated;
-}
-/* Playback lives in ../mascotMotion.ts (Web Animations, ping-pong for gestures);
-   CSS owns only the cell. The stage holds one layer per pose, stacked, so a
-   pose change dissolves: the incoming layer fades in over the outgoing one,
-   which fades out a beat later, and the figure never goes see-through. */
-.mascot-stage {
-  position: relative;
-  display: inline-block;
-}
-.mascot-stage > .mascot {
-  position: absolute;
-  inset: 0;
-}
-.mascot-fade-in {
-  animation: mascot-fade-in 140ms cubic-bezier(0.23, 1, 0.32, 1) both;
-}
-.mascot-fade-out {
-  animation: mascot-fade-out 140ms cubic-bezier(0.23, 1, 0.32, 1) 60ms both;
-}
-@keyframes mascot-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes mascot-fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-/* The resident mascot's corner anchor: an overlay pinned to the pane's
-   bottom-right, above the composer, that does NOT scroll with the log. Chrome
-   ignores position:sticky on floats, so a float can't both wrap text and stay
-   bottom-pinned — this keeps the pin (the load-bearing "always in the corner"),
-   and accepts that message text passes under rather than around it. It sits
-   just inside the right/bottom edge; pointer-events:none lets clicks reach the
-   links and messages beneath. z-index clears the streaming prose.
-   scaleX(-1) mirrors him to face LEFT, into the conversation — the sprites are
-   drawn facing right, and pinned bottom-right that put him staring off the
-   panel edge. A flip is lossless for pixel art (no resampling) and composes
-   cleanly with the background-position sprite stepping. */
+
+/* The resident holds the pane's bottom-right corner over the log. Clicks pass
+   through him to the messages beneath. */
 .mascot-resident {
   position: absolute;
   right: 0.25rem;
   bottom: 0.25rem;
   z-index: 10;
   pointer-events: none;
-  transform: scaleX(-1);
 }
 
-/* Fordhawke's thought bubble (AuditChat): the in-flight status, lifted out of
-   the message flow (ADR 0032's inline shimmer line) into a cloud above the
-   resident's head — the wait now reads as HIM thinking, not a stray line in
-   the log. Anchored to the same pane wrapper as .mascot-resident, sitting
-   above and left of the corner; two tail dots descend toward his head. The
-   phrase keeps the shimmer ink so the pane still visibly lives through a long
-   tool call, and stays legible frozen under reduced motion. pointer-events:none
-   so it never intercepts a tap meant for the log beneath. */
+/* Fordhawke's thought bubble: the turn's status, above and left of his head so
+   the wait reads as him thinking. Anchored to his height (--ram, set on the
+   pane), so it follows the size setting; the tail's last dot lands just over
+   his cap. With him off, the bubble sits in the corner without a tail. */
 .thought-bubble {
   position: absolute;
-  right: 2.5rem;
-  bottom: 8.25rem;
+  right: calc(0.25rem + var(--ram, 108px) * 0.405 - 8px);
+  bottom: calc(0.25rem + var(--ram, 108px) * 0.95 + 24px);
   z-index: 20;
   max-width: 13rem;
   pointer-events: none;
+}
+.thought-bubble--solo {
+  right: 0.75rem;
+  bottom: 0.75rem;
 }
 .thought-dot {
   position: absolute;
@@ -251,24 +198,16 @@ body {
 .thought-dot--1 {
   width: 0.5rem;
   height: 0.5rem;
-  right: 0.75rem;
-  bottom: -0.5rem;
+  right: 0.5rem;
+  bottom: -0.7rem;
 }
 .thought-dot--2 {
-  width: 0.375rem;
-  height: 0.375rem;
-  right: 0.25rem;
-  bottom: -1.375rem;
+  width: 0.35rem;
+  height: 0.35rem;
+  right: 0.1rem;
+  bottom: -1.3rem;
 }
 
-/* Reduced motion: frame 0. The component already skips the animation and forces
-   the idle sprite; this holds even before JS runs. */
-@media (prefers-reduced-motion: reduce) {
-  .mascot {
-    animation: none !important;
-    background-position-x: 0 !important;
-  }
-}
 
 /* Motion marks a state transition; it never decorates. A student who asked the
    OS to stop moving things gets a still panel — including the chat's smooth
@@ -300,4 +239,70 @@ body {
 .dark .week-clash-band {
   background-image: repeating-linear-gradient(135deg, rgb(248 113 113 / 0.55) 0 1.5px, transparent 1.5px 5px);
   box-shadow: inset 0 0 0 1px rgb(248 113 113 / 0.7);
+}
+
+/* Fordhawke, the vector rig (ADR 0044). Parts move on transforms only. A pose
+   shows its arm and prop variants by opacity, so a change cross-fades in place
+   while the head eases into its new angle. Loops are slow and small: he is
+   alive in the corner, not performing. */
+.fh {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.fh g {
+  transform-box: fill-box;
+}
+/* A dark outline vanishes on dark paper; a faint cream rim keeps the silhouette. */
+.dark .fh {
+  filter: drop-shadow(0 0 0.7px rgb(245 240 230 / 0.55)) drop-shadow(0 0 2px rgb(245 240 230 / 0.12));
+}
+.fh-part {
+  opacity: 0;
+  transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.fh:is([data-pose="idle"], [data-pose="walk"], [data-pose="walk-left"]) :is(.fh-arm-down, .fh-arm-back-down),
+.fh[data-pose="wave"] :is(.fh-arm-wave, .fh-arm-back-down),
+.fh[data-pose="ponder"] :is(.fh-arm-chin, .fh-arm-back-down),
+.fh[data-pose="reading"] :is(.fh-arm-hold, .fh-arm-back-hold, .fh-scroll),
+.fh[data-pose="whatif"] :is(.fh-arm-hold, .fh-arm-back-hold, .fh-ball) {
+  opacity: 1;
+}
+.fh-head {
+  transform-origin: 50% 95%;
+  transition: transform 340ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.fh[data-pose="ponder"] .fh-head { transform: rotate(-7deg) translateY(-1px); }
+.fh[data-pose="reading"] .fh-head { transform: rotate(6deg) translateY(1.5px); }
+.fh[data-pose="whatif"] .fh-head { transform: rotate(4deg) translateY(1px); }
+.fh-pupils { transition: transform 260ms cubic-bezier(0.23, 1, 0.32, 1); }
+.fh[data-pose="ponder"] .fh-pupils { transform: translate(-0.6px, -2px); }
+.fh[data-pose="whatif"] .fh-pupils { transform: translate(-1px, 1.6px); }
+
+.fh-body { transform-origin: 50% 100%; animation: fh-breathe 3.6s ease-in-out infinite; }
+.fh-eyes { transform-origin: 50% 55%; animation: fh-blink 5.2s infinite; }
+.fh-tassel { transform-origin: 0% 0%; animation: fh-sway 2.8s ease-in-out infinite; }
+.fh-wave { transform-origin: 100% 100%; animation: fh-wave 0.95s ease-in-out infinite alternate; }
+.fh[data-pose="reading"] .fh-pupils { animation: fh-scan 1.9s ease-in-out infinite; }
+.fh[data-pose="ponder"] .fh-head { animation: fh-muse 3.2s ease-in-out infinite; }
+.fh-ball-glow { transform-box: fill-box; transform-origin: center; animation: fh-glow 1.6s ease-in-out infinite; }
+.fh-spark { transform-box: fill-box; transform-origin: center; animation: fh-spark 1.6s ease-in-out infinite; }
+
+@keyframes fh-breathe { 50% { transform: translateY(-0.9px) scaleY(1.008); } }
+@keyframes fh-blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(0.12); } }
+@keyframes fh-sway { 50% { transform: rotate(-5deg); } }
+@keyframes fh-wave { from { transform: rotate(-8deg); } to { transform: rotate(14deg); } }
+@keyframes fh-scan { 0%, 100% { transform: translateX(-1.4px) translateY(1.2px); } 50% { transform: translateX(1.2px) translateY(1.2px); } }
+@keyframes fh-muse { 0%, 100% { transform: rotate(-7deg) translateY(-1px); } 50% { transform: rotate(-4deg) translateY(-1.6px); } }
+@keyframes fh-glow { 50% { opacity: 0.6; transform: scale(1.08); } }
+@keyframes fh-spark { 0%, 100% { opacity: 0.3; transform: scale(0.6) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+
+/* Reduced motion: the pose still changes (it says what he's doing); nothing loops. */
+.fh[data-still] *,
+.fh[data-still] {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fh * { animation: none !important; }
 }

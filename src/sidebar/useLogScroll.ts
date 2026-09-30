@@ -9,10 +9,12 @@ import { useEffect, useRef, useState } from "react";
 import { prefersReducedMotion } from "./theme";
 
 const BOTTOM_THRESHOLD = 40; // px: near the bottom counts as at it
-export const FLOOR_MIN = 128; // the resident's band
 const PIN_GAP = 8;
 
-export function useLogScroll() {
+/** `floorMin` is the resident's band: his height plus a margin, or a little air when he's off. */
+export function useLogScroll(floorMin: number) {
+  const floorMinRef = useRef(floorMin);
+  floorMinRef.current = floorMin;
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const floorRef = useRef<HTMLDivElement>(null);
@@ -31,12 +33,12 @@ export function useLogScroll() {
     const c = containerRef.current;
     const floor = floorRef.current;
     if (!c || !floor) return;
-    let h = FLOOR_MIN;
+    let h = floorMinRef.current;
     const turn = pinnedTurnRef.current;
     if (turn?.isConnected) {
       const below = floor.getBoundingClientRect().top - turn.getBoundingClientRect().top;
       const padBottom = parseFloat(getComputedStyle(c).paddingBottom) || 0;
-      h = Math.max(FLOOR_MIN, c.clientHeight - PIN_GAP - below - padBottom);
+      h = Math.max(floorMinRef.current, c.clientHeight - PIN_GAP - below - padBottom);
     }
     floor.style.height = `${Math.round(h)}px`;
   }
@@ -90,6 +92,13 @@ export function useLogScroll() {
     pinnedTurnRef.current = null;
     fitFloor();
   }
+
+  // A new size setting refits the floor at once.
+  useEffect(() => {
+    fitFloor();
+    measure();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [floorMin]);
 
   return { containerRef, contentRef, floorRef, bottomRef, isAtBottom, pinLastUserTurn, landAtEnd, scrollToBottom, resetPin };
 }
